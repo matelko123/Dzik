@@ -33,5 +33,6 @@ app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+app.MapInfrastructureEndpoints();
 app.UseEndpoints<Program>();
 app.Run();

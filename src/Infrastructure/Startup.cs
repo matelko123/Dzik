@@ -21,8 +21,20 @@ public static class Startup
         return services
             .AddAuth(config)
             .AddPersistence(config)
+            .AddHealthCheck()
             .AddServices();
     }
+    public static IEndpointRouteBuilder MapInfrastructureEndpoints(this IEndpointRouteBuilder builder)
+    {
+        builder.MapHealthCheck();
+        return builder;
+    }
+
+    private static IServiceCollection AddHealthCheck(this IServiceCollection services) =>
+        services.AddHealthChecks().AddDbContextCheck<BaseDbContext>().Services;
+    
+    private static IEndpointConventionBuilder MapHealthCheck(this IEndpointRouteBuilder endpoints) =>
+        endpoints.MapHealthChecks("/api/health");
     
     public static async Task InitializeDatabasesAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
     {
