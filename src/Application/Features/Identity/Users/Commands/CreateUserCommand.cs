@@ -15,8 +15,7 @@ public sealed record CreateUserCommand(
 
 public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 {
-    // TODO: Add MustAsync for props UserName and Email to be unique
-    public CreateUserCommandValidator()
+    public CreateUserCommandValidator(IUserService userService)
     {
         RuleFor(u => u.FirstName)
             .MinimumLength(3);
@@ -24,14 +23,24 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
         RuleFor(u => u.LastName)
             .MinimumLength(5);
         
-        RuleFor(u => u.UserName)
+        RuleFor(u => u.Email).Cascade(CascadeMode.Stop)
+            .NotEmpty()
+            .EmailAddress()
+            .MustAsync(async (email, _) => !await userService.ExistsWithEmailAsync(email))
+                .WithMessage((_, email) => $"Email {email} is already registered.");
+
+        RuleFor(u => u.UserName).Cascade(CascadeMode.Stop)
             .NotEmpty()
             .MinimumLength(5)
-            .MaximumLength(20);
+            .MaximumLength(20)
+            .MustAsync(async (name, _) => !await userService.ExistsWithNameAsync(name))
+                .WithMessage((_, name) => $"Username {name} already taken");
         
-        RuleFor(x => x.PhoneNumber)
+        RuleFor(x => x.PhoneNumber).Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Invalid phone number format.");
+            .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Invalid phone number format.")
+            .MustAsync(async (phone, _) => !await userService.ExistsWithPhoneNumberAsync(phone!))
+                .WithMessage((_, phone) => $"Phone number {phone} is already registered.");
     }
 }
 
