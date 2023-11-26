@@ -21,7 +21,7 @@ public class UserService : IUserService
         var result = await _userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
         {
-            throw new Exception($"Validation Errors Occurred. {result.GetErrors()}");
+            throw new Exception($"Identity Errors Occurred. {result.GetErrors()}");
         }
         
         // TODO: Send confirmation email if is set

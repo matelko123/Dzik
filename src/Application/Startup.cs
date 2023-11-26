@@ -1,5 +1,8 @@
 using System.Reflection;
+using Application.Abstractions.Behaviors;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using ValidationException = Application.Exceptions.ValidationException;
 
 namespace Application;
 
@@ -10,6 +13,11 @@ public static class Startup
     {
         var assembly = Assembly.GetExecutingAssembly();
         return services
-            .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
+            .AddValidatorsFromAssembly(assembly)
+            .AddMediatR(config =>
+            {
+                config.RegisterServicesFromAssembly(assembly);
+                config.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            });
     }
 }
