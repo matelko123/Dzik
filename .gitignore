@@ -4,3 +4,6 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 /.idea/
+/src/Host/database.db
+/src/Host/database.db-shm
+/src/Host/database.db-wal

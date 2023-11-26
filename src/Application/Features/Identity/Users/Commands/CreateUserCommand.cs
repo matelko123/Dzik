@@ -6,6 +6,7 @@ namespace Application.Features.Identity.Users.Commands;
 public sealed record CreateUserCommand(
     string FirstName,
     string LastName,
+    string UserName,
     string Email,
     string Password,
     string? PhoneNumber
