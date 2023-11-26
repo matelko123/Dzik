@@ -12,9 +12,11 @@ public class ApplicationDbInitializer
 
     public ApplicationDbInitializer(
         BaseDbContext dbContext, 
+        ApplicationDbSeeder dbSeeder,
         ILogger<ApplicationDbInitializer> logger)
     {
         _dbContext = dbContext;
+        _dbSeeder = dbSeeder;
         _logger = logger;
     }
     

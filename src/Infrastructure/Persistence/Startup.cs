@@ -1,4 +1,5 @@
 using Infrastructure.Persistence.Context;
+using Infrastructure.Persistence.Initialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,9 @@ internal static class Startup
                 var connectionString = configuration.GetConnectionString("Default")
                                        ?? throw new Exception("Empty connection string 'Default'");
                 opt.UseSqlite(connectionString);
-            });
+            })
+            .AddTransient<IDatabaseInitializer, DatabaseInitializer>()
+            .AddTransient<ApplicationDbInitializer>()
+            .AddTransient<ApplicationDbSeeder>();
     }
 }
