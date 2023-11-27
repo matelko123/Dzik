@@ -4,6 +4,7 @@ using Domain.Entities.Identity;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Shared.Wrapper;
 
 namespace Infrastructure.Identity;
 
@@ -20,18 +21,18 @@ public class UserService : IUserService
         => await _userManager.FindByNameAsync(name) is not null;
 
     public async Task<bool> ExistsWithEmailAsync(string email, Guid? exceptId = null)
-        => await _userManager.FindByEmailAsync(email.Normalize()) is AppUser user && user.Id != exceptId;
+        => await _userManager.FindByEmailAsync(email.Normalize()) is { } user && user.Id != exceptId;
 
     public async Task<bool> ExistsWithPhoneNumberAsync(string phoneNumber, Guid? exceptId = null)
-        => await _userManager.Users.FirstOrDefaultAsync(x => x.PhoneNumber == phoneNumber) is AppUser user && user.Id != exceptId;
+        => await _userManager.Users.FirstOrDefaultAsync(x => x.PhoneNumber == phoneNumber) is { } user && user.Id != exceptId;
 
-    public async Task<Guid> CreateAsync(CreateUserCommand request, CancellationToken token = default)
+    public async Task<Result<Guid>> CreateAsync(CreateUserCommand request, CancellationToken token = default)
     {
-        AppUser user = request.Adapt<AppUser>();
+        var user = request.Adapt<AppUser>();
         var result = await _userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
         {
-            throw new Exception($"Identity Errors Occurred. {result.GetErrors()}");
+            return await Result<Guid>.FailAsync(result.GetErrors());
         }
         
         // TODO: Send confirmation email if is set

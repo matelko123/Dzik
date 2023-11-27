@@ -29,32 +29,28 @@ public class ExceptionHandlingMiddleware : IMiddleware
     private static async Task HandleExceptionAsync(HttpContext httpContext, Exception exception)
     {
         var statusCode = GetStatusCode(exception);
-        var response = new
+        var response = new ErrorResult
         {
-            title = GetTitle(exception),
-            status = statusCode,
-            detail = exception.Message,
-            errors = GetErrors(exception)
+            Exception = exception.GetType().FullName!,
+            StatusCode = statusCode,
+            Message = exception.Message,
+            Errors = GetErrors(exception)
         };
         httpContext.Response.ContentType = "application/json";
         httpContext.Response.StatusCode = statusCode;
         await httpContext.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
+    
     private static int GetStatusCode(Exception exception) =>
         exception switch
         {
-            ValidationException => StatusCodes.Status400BadRequest,
+            ValidationException => StatusCodes.Status422UnprocessableEntity,
             _ => StatusCodes.Status500InternalServerError
         };
-    private static string GetTitle(Exception exception) =>
-        exception switch
-        {
-            ValidationException validationException => validationException.Message,
-            _ => "Server Error"
-        };
-    private static IReadOnlyDictionary<string, string[]> GetErrors(Exception exception)
+
+    private static IReadOnlyDictionary<string, string[]>? GetErrors(Exception exception)
     {
-        IReadOnlyDictionary<string, string[]> errors = new Dictionary<string, string[]>();
+        IReadOnlyDictionary<string, string[]>? errors = null;
         if (exception is ValidationException validationException)
         {
             errors = validationException.Errors

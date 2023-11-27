@@ -1,5 +1,6 @@
 using Application.Features.Identity.Users.Commands;
 using Host.Endpoints.Internal;
+using Host.Middleware;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,14 +15,18 @@ public class UsersEndpoints : IEndpoints
     public static void DefineEndpoints(IEndpointRouteBuilder app)
     {
         app.MapPost(BaseRoute, async (
-            [FromBody] CreateUserCommand command, ISender sender, CancellationToken cancellationToken) =>
+            [FromBody] CreateUserCommand command, 
+                ISender sender, CancellationToken cancellationToken) =>
         {
             var client = await sender.Send(command, cancellationToken);
-            return Results.Ok(client);
+            return client.Match(
+                Results.Ok,
+                Results.BadRequest);
         })
             .WithName("CreateClient")
             .WithTags(Tag)
             .Accepts<CreateUserCommand>(ContentType)
-            .Produces<Guid>(StatusCodes.Status201Created);
+            .Produces<Guid>(StatusCodes.Status201Created)
+            .Produces<ErrorResult>(StatusCodes.Status422UnprocessableEntity);
     }
 }

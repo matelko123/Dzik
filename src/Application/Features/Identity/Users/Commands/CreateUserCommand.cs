@@ -1,6 +1,7 @@
 using Application.Abstractions.Messaging;
 using Application.Identity.Users;
 using FluentValidation;
+using Shared.Wrapper;
 
 namespace Application.Features.Identity.Users.Commands;
 
@@ -11,7 +12,7 @@ public sealed record CreateUserCommand(
     string Email,
     string Password,
     string? PhoneNumber
-    ) : ICommand<Guid>;
+    ) : ICommand<Result<Guid>>;
 
 public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 {
@@ -44,7 +45,7 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
     }
 }
 
-public sealed class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Guid>
+public sealed class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Result<Guid>>
 {
     private readonly IUserService _userService;
 
@@ -53,7 +54,7 @@ public sealed class CreateUserCommandHandler : ICommandHandler<CreateUserCommand
         _userService = userService;
     }
 
-    public async Task<Guid> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         var result = await _userService.CreateAsync(request, cancellationToken);
         return result;

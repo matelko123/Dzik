@@ -3,7 +3,7 @@ namespace Application.Exceptions;
 public class ValidationException : Exception
 {
     public ValidationException(IReadOnlyCollection<ValidationError> errors)
-        : base ("Validation failed")
+        : base ("One or more validation errors occurs")
     {
         Errors = errors;
     }
