@@ -1,6 +1,7 @@
 using Infrastructure.Auth;
 using Infrastructure.Common;
 using Infrastructure.Mapping;
+using Infrastructure.OpenApi;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Persistence.Initialization;
@@ -22,8 +23,19 @@ public static class Startup
             .AddAuth(config)
             .AddPersistence(config)
             .AddHealthCheck()
-            .AddServices();
+            .AddServices()
+            .AddHttpContextAccessor()
+            .AddSwaggerDocumentation();
     }
+
+    public static IApplicationBuilder UseInfrastructure(this IApplicationBuilder app)
+    {
+        return app
+            .UseAuthentication()
+            .UseAuthorization()
+            .UseSwaggerDocumentation();
+    }
+    
     public static IEndpointRouteBuilder MapInfrastructureEndpoints(this IEndpointRouteBuilder builder)
     {
         builder.MapHealthCheck();

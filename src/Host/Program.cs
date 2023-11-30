@@ -32,7 +32,8 @@ app.UseHttpsRedirection();
 //Add support to logging request with SERILOG
 app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
+app.UseInfrastructure();
 app.MapInfrastructureEndpoints();
 app.UseEndpoints<Program>();
+// app.MapIdentityApi<AppUser>();
 app.Run();

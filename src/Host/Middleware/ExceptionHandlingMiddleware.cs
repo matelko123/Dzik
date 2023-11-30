@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Application.Exceptions;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Host.Middleware;
 
@@ -45,6 +46,7 @@ public class ExceptionHandlingMiddleware : IMiddleware
         exception switch
         {
             ValidationException => StatusCodes.Status422UnprocessableEntity,
+            AuthenticationFailureException => StatusCodes.Status401Unauthorized,
             _ => StatusCodes.Status500InternalServerError
         };
 

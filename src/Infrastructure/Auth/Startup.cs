@@ -1,3 +1,4 @@
+using Infrastructure.Auth.Jwt;
 using Infrastructure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,8 @@ internal static class Startup
         this IServiceCollection services, 
         IConfiguration config)
     {
-        return services.AddIdentity();
+        return services
+            .AddIdentity()
+            .AddJwtAuth();
     }
 }

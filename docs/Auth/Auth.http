@@ -1,0 +1,10 @@
+
+POST https://localhost:44323/auth/signin
+Content-Type: application/json
+
+{
+  "email": "mateusz@op.pl",
+  "password": "qwerty"
+}
+
+###

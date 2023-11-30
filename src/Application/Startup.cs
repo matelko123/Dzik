@@ -2,7 +2,6 @@ using System.Reflection;
 using Application.Abstractions.Behaviors;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using ValidationException = Application.Exceptions.ValidationException;
 
 namespace Application;
 

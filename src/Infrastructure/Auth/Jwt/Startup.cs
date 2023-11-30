@@ -9,7 +9,7 @@ internal static class Startup
     internal static IServiceCollection AddJwtAuth(this IServiceCollection services)
     {
         services.AddOptions<JwtSettings>()
-            .BindConfiguration(JwtSettings.SECTION_NAME)
+            .BindConfiguration(JwtSettings.SectionName)
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -22,6 +22,7 @@ internal static class Startup
                 authentication.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, null!)
-            .Services;
+            .Services
+            .AddAuthorization();
     }
 }
