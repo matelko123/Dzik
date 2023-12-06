@@ -46,6 +46,22 @@ public class AuthEndpoints : IEndpoints
             .Accepts<SignInCommand>(ContentType)
             .Produces<TokenResponse>();
         
+        
+        app.MapPost($"{BaseRoute}/refresh", async (
+                [FromBody] RefreshTokenCommand request, 
+                ISender sender, CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(request, cancellationToken);
+                return result.Match(
+                    Results.Ok,
+                    Results.BadRequest);
+            })
+            .WithName("Refresh token")
+            .WithTags(Tag)
+            .Accepts<SignInCommand>(ContentType)
+            .Produces<TokenResponse>()
+            .RequireAuthorization();
+        
         app.MapPost($"{BaseRoute}/info",  (
                 ClaimsPrincipal claims) =>
             {

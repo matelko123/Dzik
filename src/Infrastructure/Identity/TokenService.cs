@@ -1,14 +1,15 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using Application.Common.Interfaces;
 using Application.Identity.Tokens;
 using Domain.Entities.Identity;
 using Infrastructure.Auth.Jwt;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Wrapper;
+using Shared.Authorization;
 
 namespace Infrastructure.Identity;
 
@@ -16,14 +17,20 @@ public class TokenService: ITokenService
 {
     private readonly IClock _clock;
     private readonly JwtSettings _jwtSettings;
-    
+    private readonly UserManager<AppUser> _userManager;
+    private readonly IRefreshTokenService _refreshTokenService;
+
     private readonly TimeSpan _expiry;
 
     public TokenService(
         IClock clock,
-        IOptions<JwtSettings> jwtSettings)
+        IOptions<JwtSettings> jwtSettings, 
+        UserManager<AppUser> userManager, 
+        IRefreshTokenService refreshTokenService)
     {
         _clock = clock;
+        _userManager = userManager;
+        _refreshTokenService = refreshTokenService;
         _jwtSettings = jwtSettings.Value;
             
         _expiry = _jwtSettings.TokenExpiration ?? TimeSpan.FromHours(1);
@@ -45,48 +52,43 @@ public class TokenService: ITokenService
             new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
         };
     
-    public TokenResponse CreateToken(AppUser user, CancellationToken cancellationToken = default)
+    public async Task<Result<TokenResponse>> CreateTokenAsync(AppUser user, CancellationToken cancellationToken = default)
     {
         var now = _clock.Current();
         var expires = now.Add(_expiry);
 
         var token = GenerateJwt(user, expires);
-        var refreshToken = GenerateRefreshToken();
-        return new TokenResponse(token, refreshToken, expires);
+
+        var refreshToken = await _refreshTokenService.GenerateRefreshTokenAsync(user.Id, cancellationToken);
+        return new TokenResponse(token, refreshToken.Data, expires);
     }
     
-    
-   
-
-    /*public async Task<Result<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<TokenResponse>> RefreshTokenAsync(string token, string refreshToken, CancellationToken cancellationToken = default)
     {
-       
-        var refreshTokenProtector = _bearerTokenOptions.Get(IdentityConstants.BearerScheme).RefreshTokenProtector;
-        var refreshTicket = refreshTokenProtector.Unprotect(request.RefreshToken);
-
-        // Reject the /refresh attempt with a 401 if the token expired or the security stamp validation fails
-        if (refreshTicket?.Properties?.ExpiresUtc is not { } expiresUtc ||
-            DateTime.UtcNow >= expiresUtc ||
-            await _signInManager.ValidateSecurityStampAsync(refreshTicket.Principal) is not AppUser user)
-
+        Result<ClaimsPrincipal> userPrincipal = GetPrincipalFromExpiredToken(token);
+        if (!userPrincipal.Succeeded)
         {
-            return await Result<TokenResponse>.FailAsync("Invalid token");
+            return await Result<TokenResponse>.FailAsync(userPrincipal.Messages);
+        }
+        
+        string? userEmail = userPrincipal.Data.GetEmail();
+        
+        var user = await _userManager.FindByEmailAsync(userEmail!);
+        if (user is null)
+        {
+            return await Result<TokenResponse>.FailAsync("Authentication Failed.");
+        }
+        
+        if (!await _refreshTokenService.ValidateAsync(refreshToken, cancellationToken))
+        {
+            return await Result<TokenResponse>.FailAsync("Invalid Refresh Token.");
         }
 
-        var newPrincipal = await _signInManager.CreateUserPrincipalAsync(user);
-        return await GenerateTokensAndUpdateUser(user);
-    }*/
+        return await CreateTokenAsync(user, cancellationToken);
+    }
     
     private string GenerateJwt(AppUser user, DateTime expires) =>
         GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user), expires);
-    
-    private static string GenerateRefreshToken()
-    {
-        byte[] randomNumber = new byte[32];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomNumber);
-        return Convert.ToBase64String(randomNumber);
-    }
     
     private string GenerateEncryptedToken(SigningCredentials signingCredentials, IEnumerable<Claim> claims, DateTime expires)
     {

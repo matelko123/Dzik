@@ -38,7 +38,7 @@ public sealed class SignInCommandHandler : ICommandHandler<SignInCommand, Result
         
         // If user confirm Email if is required
 
-        var isPasswordValid = await _signInManager.PasswordSignInAsync(user, request.Password, true, false);
+        SignInResult isPasswordValid = await _signInManager.PasswordSignInAsync(user, request.Password, true, false);
         if (!isPasswordValid.Succeeded)
         {
             if (isPasswordValid.IsLockedOut)
@@ -50,9 +50,14 @@ public sealed class SignInCommandHandler : ICommandHandler<SignInCommand, Result
         }
         
         // Generate JWT & refresh
-        var token = _tokenService.CreateToken(user, cancellationToken);
+        Result<TokenResponse> token = await _tokenService.CreateTokenAsync(user, cancellationToken);
+        if (!token.Succeeded)
+        {
+            return await Result<TokenResponse>.FailAsync(token.Messages);
+        }
+        
         // Set JWT to httpContext
-        _tokenStorage.Set(token.Token);
+        _tokenStorage.Set(token.Data!.Token);
         return token;
     }
 }
