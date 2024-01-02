@@ -9,7 +9,7 @@ namespace Application.Features.Identity.Users.Commands;
 
 public sealed record SignInCommand(string Email, string Password) : ICommand<Result<TokenResponse>>;
 
-public sealed class SignInCommandHandler : ICommandHandler<SignInCommand, Result<TokenResponse>>
+internal sealed class SignInCommandHandler : ICommandHandler<SignInCommand, Result<TokenResponse>>
 {
     private readonly UserManager<AppUser> _userManager;
     private readonly SignInManager<AppUser> _signInManager;

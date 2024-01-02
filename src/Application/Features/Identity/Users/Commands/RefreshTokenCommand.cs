@@ -6,7 +6,7 @@ namespace Application.Features.Identity.Users.Commands;
 
 public sealed record RefreshTokenCommand(string Token, string RefreshToken) : ICommand<Result<TokenResponse>>;
 
-public sealed class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, Result<TokenResponse>>
+internal sealed class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, Result<TokenResponse>>
 {
     private readonly ITokenService _tokenService;
 
