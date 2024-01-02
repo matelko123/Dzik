@@ -1,4 +1,5 @@
 using Application.Abstractions.Messaging;
+using Application.Errors;
 using Application.Identity.Users;
 using FluentValidation;
 using Shared.Wrapper;
@@ -27,25 +28,26 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
         RuleFor(u => u.Email).Cascade(CascadeMode.Stop)
             .NotEmpty()
             .EmailAddress()
+                .WithMessage(UserErrors.Validation.InvalidEmail)
             .MustAsync(async (email, _) => !await userService.ExistsWithEmailAsync(email))
-                .WithMessage((_, email) => $"Email {email} is already registered.");
+                .WithMessage((_, email) => UserErrors.Validation.EmailAlreadyTaken(email));
 
         RuleFor(u => u.UserName).Cascade(CascadeMode.Stop)
             .NotEmpty()
             .MinimumLength(5)
             .MaximumLength(20)
             .MustAsync(async (name, _) => !await userService.ExistsWithNameAsync(name))
-                .WithMessage((_, name) => $"Username {name} already taken");
+                .WithMessage((_, name) => UserErrors.Validation.UsernameAlreadyTaken(name));
         
         RuleFor(x => x.PhoneNumber).Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Invalid phone number format.")
+            .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage(UserErrors.Validation.InvalidPhoneNumberFormat)
             .MustAsync(async (phone, _) => !await userService.ExistsWithPhoneNumberAsync(phone!))
-                .WithMessage((_, phone) => $"Phone number {phone} is already registered.");
+                .WithMessage((_, phone) => UserErrors.Validation.PhoneNumberAlreadyTaken(phone));
     }
 }
 
-public sealed class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Result<Guid>>
+internal sealed class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Result<Guid>>
 {
     private readonly IUserService _userService;
 
