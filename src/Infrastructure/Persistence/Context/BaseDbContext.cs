@@ -10,5 +10,5 @@ public class BaseDbContext : IdentityDbContext<AppUser, AppRole, Guid>
     {
     }
 
-    public DbSet<AppRefreshToken> RefreshTokens { get; set; }
+    public DbSet<AppRefreshToken> RefreshTokens { get; set; } = null!;
 }
