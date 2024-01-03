@@ -1,4 +1,5 @@
 using Infrastructure.Auth;
+using Infrastructure.Caching;
 using Infrastructure.Common;
 using Infrastructure.Mapping;
 using Infrastructure.OpenApi;
@@ -20,6 +21,7 @@ public static class Startup
     {
         MapsterSettings.Configure();
         return services
+            .AddCaching()
             .AddAuth(config)
             .AddPersistence(config)
             .AddHealthCheck()

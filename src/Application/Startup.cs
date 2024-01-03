@@ -17,6 +17,7 @@ public static class Startup
             {
                 config.RegisterServicesFromAssembly(assembly);
                 config.AddOpenBehavior(typeof(ValidationBehavior<,>));
+                config.AddOpenBehavior(typeof(QueryCachingPipelineBehavior<,>));
             });
     }
 }

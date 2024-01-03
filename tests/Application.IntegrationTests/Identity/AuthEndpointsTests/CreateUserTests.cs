@@ -1,4 +1,4 @@
-using Application.Features.Identity.Users.Commands;
+using Application.Features.Identity.Authentication.Commands;
 using FluentAssertions;
 using Shared.Wrapper;
 
@@ -11,8 +11,8 @@ public class CreateUserTests : BaseIntegrationTest
     {
     }
     
-    private CreateUserCommand validCommand =
-        new CreateUserCommand(
+    private RegisterCommand validCommand =
+        new RegisterCommand(
             "Mateusz", 
             "Gutowski", 
             "matelko", 
@@ -24,7 +24,7 @@ public class CreateUserTests : BaseIntegrationTest
     public async Task CreateUser_ShouldAddUser_WhenCommandIsValid()
     {
         // Arrange
-        CreateUserCommand command = validCommand;
+        RegisterCommand command = validCommand;
         
         // Act
         Result<Guid> result = await Sender.Send(command, default);
@@ -38,7 +38,7 @@ public class CreateUserTests : BaseIntegrationTest
     public async Task CreateUser_ShouldThrowError_WhenEmailIsInvalid()
     {
         // Arrange
-        CreateUserCommand command = validCommand with { Email = "test" }; 
+        RegisterCommand command = validCommand with { Email = "test" }; 
         
         // Act
         // Task Action() => Sender.Send(command, default);
