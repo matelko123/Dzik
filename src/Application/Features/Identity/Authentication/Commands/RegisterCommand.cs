@@ -1,12 +1,15 @@
 using Application.Abstractions.Messaging;
 using Application.Errors;
+using Application.Identity.Auth;
 using Application.Identity.Users;
+using Domain.Entities.Identity;
 using FluentValidation;
+using Mapster;
 using Shared.Wrapper;
 
-namespace Application.Features.Identity.Users.Commands;
+namespace Application.Features.Identity.Authentication.Commands;
 
-public sealed record CreateUserCommand(
+public sealed record RegisterCommand(
     string FirstName,
     string LastName,
     string UserName,
@@ -15,9 +18,9 @@ public sealed record CreateUserCommand(
     string? PhoneNumber
     ) : ICommand<Result<Guid>>;
 
-public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
+public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
-    public CreateUserCommandValidator(IUserService userService)
+    public RegisterCommandValidator(IUserService userService)
     {
         RuleFor(u => u.FirstName)
             .MinimumLength(3);
@@ -47,18 +50,20 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
     }
 }
 
-internal sealed class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Result<Guid>>
+internal sealed class RegisterCommandHandler
+    : ICommandHandler<RegisterCommand, Result<Guid>>
 {
-    private readonly IUserService _userService;
+    private readonly IAuthenticationService _authenticationService;
 
-    public CreateUserCommandHandler(IUserService userService)
+    public RegisterCommandHandler(IAuthenticationService authenticationService)
     {
-        _userService = userService;
+        _authenticationService = authenticationService;
     }
 
-    public async Task<Result<Guid>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
-        var result = await _userService.CreateAsync(request, cancellationToken);
+        AppUser user = request.Adapt<AppUser>();
+        Result<Guid> result = await _authenticationService.RegisterUserAsync(user, request.Password, cancellationToken);
         return result;
     }
 }

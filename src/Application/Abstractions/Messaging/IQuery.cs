@@ -1,7 +1,8 @@
 using MediatR;
+using Shared.Wrapper;
 
 namespace Application.Abstractions.Messaging;
 
-public interface IQuery<out TResponse> : IRequest<TResponse>
+public interface IQuery<TResponse> : IRequest<TResponse>
 {
 }

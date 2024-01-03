@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Application.Common.Interfaces;
 using Application.Identity.Tokens;
+using Contracts.Identity.Authentication;
 using Domain.Entities.Identity;
 using Infrastructure.Auth.Jwt;
 using Microsoft.AspNetCore.Identity;

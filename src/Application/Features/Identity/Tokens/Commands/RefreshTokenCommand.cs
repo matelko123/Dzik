@@ -1,8 +1,9 @@
 using Application.Abstractions.Messaging;
 using Application.Identity.Tokens;
+using Contracts.Identity.Authentication;
 using Shared.Wrapper;
 
-namespace Application.Features.Identity.Users.Commands;
+namespace Application.Features.Identity.Tokens.Commands;
 
 public sealed record RefreshTokenCommand(string Token, string RefreshToken) : ICommand<Result<TokenResponse>>;
 

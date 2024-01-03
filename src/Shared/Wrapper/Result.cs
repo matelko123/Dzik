@@ -18,30 +18,30 @@ public class Result : IResult
     public static implicit operator Result(bool isSuccess) => new(isSuccess);
     public static implicit operator bool(Result result) => result.Succeeded;
     
-    public static IResult Fail() 
+    public static Result Fail() 
         => new Result(false);
-    public static IResult Fail(List<string> messages) 
+    public static Result Fail(List<string> messages) 
         => new Result(messages, false);
-    public static IResult Fail(params string[] messages) 
+    public static Result Fail(params string[] messages) 
         => new Result(new List<string>(messages), false);
-    public static Task<IResult> FailAsync()
+    public static Task<Result> FailAsync()
         => Task.FromResult(Fail());
-    public static Task<IResult> FailAsync(List<string> messages)
+    public static Task<Result> FailAsync(List<string> messages)
         => Task.FromResult(Fail(messages));
-    public static Task<IResult> FailAsync(params string[] messages)
+    public static Task<Result> FailAsync(params string[] messages)
         => Task.FromResult(Fail(messages));
 
-    public static IResult Success()
+    public static Result Success()
         => new Result();
-    public static IResult Success(List<string> messages)
+    public static Result Success(List<string> messages)
         => new Result(messages, true);
-    public static IResult Success(params string[] messages)
+    public static Result Success(params string[] messages)
         => new Result(new List<string>(messages), true);
-    public static Task<IResult> SuccessAsync()
+    public static Task<Result> SuccessAsync()
         => Task.FromResult(Success());
-    public static Task<IResult> SuccessAsync(List<string> messages)
+    public static Task<Result> SuccessAsync(List<string> messages)
         => Task.FromResult(Success(messages));
-    public static Task<IResult> SuccessAsync(string message)
+    public static Task<Result> SuccessAsync(string message)
         => Task.FromResult(Success(message));
 }
 

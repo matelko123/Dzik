@@ -1,11 +1,16 @@
 using System.Security.Claims;
-using Application.Features.Identity.Users.Commands;
-using Application.Identity.Tokens;
+using Application.Features.Identity.Authentication.Commands;
+using Application.Features.Identity.Tokens.Commands;
+using Application.Features.Identity.Users.Queries;
+using Contracts.Identity.Authentication;
+using Domain.Entities.Identity;
 using Host.Endpoints.Internal;
 using Host.Middleware;
+using Mapster;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Authorization;
+using Shared.Wrapper;
 
 namespace Host.Endpoints.Identity;
 
@@ -14,55 +19,57 @@ public class AuthEndpoints : IEndpoints
     private const string ContentType = "application/json";
     private const string Tag = "Auth";
     private const string BaseRoute = "auth";
-    
+
     public static void DefineEndpoints(IEndpointRouteBuilder app)
     {
-        app.MapPost($"{BaseRoute}/signup", async (
-                [FromBody] CreateUserCommand command, 
+        app.MapPost($"{BaseRoute}/register", async (
+                [FromBody] RegisterRequest request,
                 ISender sender, CancellationToken cancellationToken) =>
             {
-                var client = await sender.Send(command, cancellationToken);
+                RegisterCommand command = request.Adapt<RegisterCommand>();
+                Result<Guid> client = await sender.Send(command, cancellationToken);
                 return client.Match(
                     Results.Ok,
                     Results.BadRequest);
             })
-            .WithName("Sign up")
+            .WithName("Register")
             .WithTags(Tag)
-            .Accepts<CreateUserCommand>(ContentType)
+            .Accepts<RegisterRequest>(ContentType)
             .Produces<Guid>(StatusCodes.Status201Created)
             .Produces<ErrorResult>(StatusCodes.Status422UnprocessableEntity);
-        
-        app.MapPost($"{BaseRoute}/signin", async (
-                [FromBody] SignInCommand command, 
+
+        app.MapPost($"{BaseRoute}/login", async (
+                [FromBody] LoginRequest request,
                 ISender sender, CancellationToken cancellationToken) =>
             {
-                var client = await sender.Send(command, cancellationToken);
+                LoginCommand command = request.Adapt<LoginCommand>();
+                Result<TokenResponse> client = await sender.Send(command, cancellationToken);
                 return client.Match(
                     Results.Ok,
                     Results.BadRequest);
             })
-            .WithName("Sign in")
+            .WithName("Login")
             .WithTags(Tag)
-            .Accepts<SignInCommand>(ContentType)
+            .Accepts<LoginRequest>(ContentType)
             .Produces<TokenResponse>();
-        
-        
+
+
         app.MapPost($"{BaseRoute}/refresh", async (
-                [FromBody] RefreshTokenCommand request, 
+                [FromBody] RefreshTokenCommand request,
                 ISender sender, CancellationToken cancellationToken) =>
             {
-                var result = await sender.Send(request, cancellationToken);
+                Result<TokenResponse> result = await sender.Send(request, cancellationToken);
                 return result.Match(
                     Results.Ok,
                     Results.BadRequest);
             })
             .WithName("Refresh token")
             .WithTags(Tag)
-            .Accepts<SignInCommand>(ContentType)
+            .Accepts<LoginCommand>(ContentType)
             .Produces<TokenResponse>()
             .RequireAuthorization();
-        
-        app.MapPost($"{BaseRoute}/info",  (
+
+        app.MapPost($"{BaseRoute}/info", (
                 ClaimsPrincipal claims) =>
             {
                 var result = new
@@ -74,11 +81,25 @@ public class AuthEndpoints : IEndpoints
                     PhoneNumber = claims.GetPhoneNumber(),
                     Claims = claims.Claims.Select(x => x.Value).ToArray()
                 };
-                
+
                 return Results.Ok(result);
             })
             .WithName("Info")
             .WithTags(Tag)
             .RequireAuthorization();
+
+        app.MapGet($"{BaseRoute}/{{userId}}", async (
+            [FromRoute] Guid userId,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            Result<AppUser> result = await sender.Send(new GetUserByIdQuery(userId), cancellationToken);
+            return result.Match(
+                Results.Ok,
+                Results.BadRequest);
+        })
+        .WithName("Get cached user")
+        .WithTags(Tag)
+        .Produces<AppUser>();
     }
 }
