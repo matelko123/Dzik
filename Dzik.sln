@@ -25,7 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{80D53301-0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Requests", "Requests", "{97D745A0-4E9D-444B-B328-F8303F961515}"
 	ProjectSection(SolutionItems) = preProject
-		docs\auth.http = docs\auth.http
+		docs\Auth\auth.http = docs\Auth\auth.http
+		docs\Auth\user.http = docs\Auth\user.http
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "src\Contracts\Contracts.csproj", "{6CCC7B51-C072-434B-845F-E82A610FC221}"

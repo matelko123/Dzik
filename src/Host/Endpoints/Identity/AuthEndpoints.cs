@@ -87,19 +87,5 @@ public class AuthEndpoints : IEndpoints
             .WithName("Info")
             .WithTags(Tag)
             .RequireAuthorization();
-
-        app.MapGet($"{BaseRoute}/{{userId}}", async (
-            [FromRoute] Guid userId,
-            ISender sender,
-            CancellationToken cancellationToken) =>
-        {
-            Result<AppUser> result = await sender.Send(new GetUserByIdQuery(userId), cancellationToken);
-            return result.Match(
-                Results.Ok,
-                Results.BadRequest);
-        })
-        .WithName("Get cached user")
-        .WithTags(Tag)
-        .Produces<AppUser>();
     }
 }
