@@ -28,6 +28,7 @@ public class UserEndpoints : IEndpoints
             })
             .WithName("Get cached user")
             .WithTags(Tag)
-            .Produces<UserDto>();
+            .Produces<UserDto>()
+            .RequireAuthorization();
     }
 }
