@@ -1,3 +1,5 @@
+using Application.Errors;
+using Application.Exceptions;
 using Application.Features.Identity.Authentication.Commands;
 using FluentAssertions;
 using Shared.Wrapper;
@@ -38,19 +40,13 @@ public class CreateUserTests : BaseIntegrationTest
     public async Task CreateUser_ShouldThrowError_WhenEmailIsInvalid()
     {
         // Arrange
-        RegisterCommand command = validCommand with { Email = "test" }; 
-        
-        // Act
-        // Task Action() => Sender.Send(command, default);
+        RegisterCommand command = validCommand with { Email = "test" };
 
+        // Act
+        Func<Task> act = () => Sender.Send(command, default);
+        
         // Assert
-        try
-        {
-            var res = await Sender.Send(command, default);
-        }
-        catch (Exception ex)
-        {
-            
-        }
+        await act.Should().ThrowAsync<ValidationException>()
+            .WithMessage("One or more validation errors occurs");
     }
 }
