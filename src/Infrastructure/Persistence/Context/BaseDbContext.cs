@@ -5,16 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Context;
 
-public class BaseDbContext : IdentityDbContext<AppUser, AppRole, Guid>
+public abstract class BaseDbContext(DbContextOptions options)
+    : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
-    public BaseDbContext(DbContextOptions<BaseDbContext> options) : base(options)
-    {
-    }
-
     // Used by Dapper
     public IDbConnection Connection => Database.GetDbConnection();
-    
-    public DbSet<AppRefreshToken> RefreshTokens { get; set; } = null!;
+
+    public DbSet<AppRefreshToken> RefreshTokens => Set<AppRefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

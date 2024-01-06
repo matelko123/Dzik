@@ -4,14 +4,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Persistence.Initialization;
 
-public class ApplicationDbInitializer
+internal sealed class ApplicationDbInitializer
 {
-    private readonly BaseDbContext _dbContext;
+    private readonly AppDbContext _dbContext;
     private readonly ApplicationDbSeeder _dbSeeder;
     private readonly ILogger<ApplicationDbInitializer> _logger;
 
     public ApplicationDbInitializer(
-        BaseDbContext dbContext, 
+        AppDbContext dbContext, 
         ApplicationDbSeeder dbSeeder,
         ILogger<ApplicationDbInitializer> logger)
     {

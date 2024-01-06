@@ -19,7 +19,7 @@ internal static class Startup
                 options.Password.RequireUppercase = false;
                 options.User.RequireUniqueEmail = true;
             })
-            .AddEntityFrameworkStores<BaseDbContext>()
+            .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
             .Services;
     }

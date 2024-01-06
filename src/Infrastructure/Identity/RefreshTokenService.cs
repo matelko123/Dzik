@@ -11,9 +11,9 @@ namespace Infrastructure.Identity;
 public class RefreshTokenService : IRefreshTokenService
 {
     private readonly IClock _clock;
-    private readonly BaseDbContext _dbContext;
+    private readonly AppDbContext _dbContext;
 
-    public RefreshTokenService(BaseDbContext dbContext, IClock clock)
+    public RefreshTokenService(AppDbContext dbContext, IClock clock)
     {
         _dbContext = dbContext;
         _clock = clock;

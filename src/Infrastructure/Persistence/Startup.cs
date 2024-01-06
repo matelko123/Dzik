@@ -13,7 +13,7 @@ internal static class Startup
     {
         
         return services
-            .AddDbContext<BaseDbContext>(opt =>
+            .AddDbContext<AppDbContext>(opt =>
             {
                 var connectionString = configuration.GetConnectionString("Default")
                                        ?? throw new Exception("Empty connection string 'Default'");

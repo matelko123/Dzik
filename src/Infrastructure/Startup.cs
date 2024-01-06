@@ -45,7 +45,7 @@ public static class Startup
     }
 
     private static IServiceCollection AddHealthCheck(this IServiceCollection services) =>
-        services.AddHealthChecks().AddDbContextCheck<BaseDbContext>().Services;
+        services.AddHealthChecks().AddDbContextCheck<AppDbContext>().Services;
     
     private static IEndpointConventionBuilder MapHealthCheck(this IEndpointRouteBuilder endpoints) =>
         endpoints.MapHealthChecks("/api/health");

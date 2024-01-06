@@ -1,19 +1,15 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Persistence.Initialization;
 
-public class DatabaseInitializer : IDatabaseInitializer
+internal sealed class DatabaseInitializer : IDatabaseInitializer
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<DatabaseInitializer> _logger;
 
     public DatabaseInitializer(
-        IServiceProvider serviceProvider, 
-        ILogger<DatabaseInitializer> logger)
+        IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
-        _logger = logger;
     }
 
     public async Task InitializeDatabasesAsync(CancellationToken cancellationToken)
