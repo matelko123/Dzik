@@ -5,6 +5,8 @@ using Application.Identity.Users;
 using Domain.Entities.Identity;
 using FluentValidation;
 using Mapster;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Shared.Wrapper;
 
 namespace Application.Features.Identity.Authentication.Commands;
@@ -20,33 +22,48 @@ public sealed record RegisterCommand(
 
 public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
-    public RegisterCommandValidator(IUserService userService)
+    public RegisterCommandValidator(IUserService userService, IOptions<IdentityOptions> options)
     {
+        var identityOptions = options.Value;
+        
         RuleFor(u => u.FirstName)
-            .MinimumLength(3);
+            .MinimumLength(UserErrors.Validation.FirstName.MinimumLength)
+                .WithMessage(UserErrors.Validation.FirstName.MinimumLengthMessage);
         
         RuleFor(u => u.LastName)
-            .MinimumLength(5);
+            .MinimumLength(UserErrors.Validation.LastName.MinimumLength)
+                .WithMessage(UserErrors.Validation.LastName.MinimumLengthMessage);
         
         RuleFor(u => u.Email).Cascade(CascadeMode.Stop)
             .NotEmpty()
+                .WithMessage(UserErrors.Validation.Email.NotEmpty)
             .EmailAddress()
-                .WithMessage(UserErrors.Validation.InvalidEmail)
+                .WithMessage(UserErrors.Validation.Email.InvalidFormat)
             .MustAsync(async (email, _) => !await userService.ExistsWithEmailAsync(email))
-                .WithMessage((_, email) => UserErrors.Validation.EmailAlreadyTaken(email));
+                .WithMessage((_, email) => UserErrors.Validation.Email.AlreadyTaken(email));
 
         RuleFor(u => u.UserName).Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .MinimumLength(5)
-            .MaximumLength(20)
+                .WithMessage(UserErrors.Validation.Username.NotEmpty)
+            .MinimumLength(UserErrors.Validation.Username.MinimumLength)
+                .WithMessage(UserErrors.Validation.Username.MinimumLengthMessage)
             .MustAsync(async (name, _) => !await userService.ExistsWithNameAsync(name))
-                .WithMessage((_, name) => UserErrors.Validation.UsernameAlreadyTaken(name));
+                .WithMessage((_, name) => UserErrors.Validation.Username.AlreadyTaken(name));
+
+
+        RuleFor(u => u.Password).Cascade(CascadeMode.Stop)
+            .NotEmpty()
+                .WithMessage(UserErrors.Validation.Password.NotEmpty)
+            .MinimumLength(identityOptions.Password.RequiredLength)
+                .WithMessage((a, b) => UserErrors.Validation.Password.MinimumLengthMessage(identityOptions.Password.RequiredLength));
         
         RuleFor(x => x.PhoneNumber).Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage(UserErrors.Validation.InvalidPhoneNumberFormat)
+                .WithMessage(UserErrors.Validation.PhoneNumber.NotEmpty)
+            .Matches(@"^\+?[1-9]\d{1,14}$")
+                .WithMessage(UserErrors.Validation.PhoneNumber.InvalidFormat)
             .MustAsync(async (phone, _) => !await userService.ExistsWithPhoneNumberAsync(phone!))
-                .WithMessage((_, phone) => UserErrors.Validation.PhoneNumberAlreadyTaken(phone));
+                .WithMessage((_, phone) => UserErrors.Validation.PhoneNumber.AlreadyTaken(phone));
     }
 }
 
