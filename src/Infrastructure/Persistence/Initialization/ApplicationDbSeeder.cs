@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Persistence.Initialization;
 
-public class ApplicationDbSeeder
+internal sealed class ApplicationDbSeeder
 {
     private readonly UserManager<AppUser> _userManager;
     private readonly RoleManager<AppRole> _roleManager;
@@ -21,17 +21,19 @@ public class ApplicationDbSeeder
         _logger = logger;
     }
     
-    public async Task SeedDatabaseAsync(BaseDbContext dbContext, CancellationToken cancellationToken)
+    public async Task SeedDatabaseAsync(AppDbContext dbContext, CancellationToken cancellationToken)
     {
         await SeedRolesAsync(dbContext);
         await SeedAdminUserAsync();
     }
     
-    private async Task SeedRolesAsync(BaseDbContext dbContext)
+    private Task SeedRolesAsync(AppDbContext dbContext)
     {
+        return Task.CompletedTask;
     }
 
-    private async Task SeedAdminUserAsync()
+    private Task SeedAdminUserAsync()
     {
+        return Task.CompletedTask;
     }
 }
