@@ -1,8 +1,7 @@
 using Application.Errors;
 using Application.Exceptions;
 using Application.Features.Identity.Authentication.Commands;
-using FluentAssertions;
-using Shared.Wrapper;
+using FluentAssertions.Specialized;
 
 namespace Application.IntegrationTests.Identity.AuthEndpointsTests;
 
@@ -13,20 +12,11 @@ public class CreateUserTests : BaseIntegrationTest
     {
     }
     
-    private RegisterCommand validCommand =
-        new RegisterCommand(
-            "Mateusz", 
-            "Gutowski", 
-            "matelko", 
-            "mateusz@gmail.com",
-            "qwerty", 
-            "123123123");
-
     [Fact]
     public async Task CreateUser_ShouldAddUser_WhenCommandIsValid()
     {
         // Arrange
-        RegisterCommand command = validCommand;
+        RegisterCommand command = RegisterCommandBuilder.Create();
         
         // Act
         Result<Guid> result = await Sender.Send(command, default);
@@ -40,13 +30,53 @@ public class CreateUserTests : BaseIntegrationTest
     public async Task CreateUser_ShouldThrowError_WhenEmailIsInvalid()
     {
         // Arrange
-        RegisterCommand command = validCommand with { Email = "test" };
+        RegisterCommand command = RegisterCommandBuilder.Create() with { Email = "test" };
+        ValidationError[] expectedErrors = [new ValidationError(
+            "Email", 
+            UserErrors.Validation.Email.InvalidFormat)];
 
         // Act
         Func<Task> act = () => Sender.Send(command, default);
         
         // Assert
-        await act.Should().ThrowAsync<ValidationException>()
-            .WithMessage("One or more validation errors occurs");
+        ExceptionAssertions<ValidationException>? e = await act.Should().ThrowAsync<ValidationException>();
+        e.WithMessage("One or more validation errors occurs");
+        e.Subject.Single().Errors.Should().BeEquivalentTo(expectedErrors);
+    }
+    
+    [Fact]
+    public async Task CreateUser_ShouldThrowError_WhenPasswordIsTooShort()
+    {
+        // Arrange
+        RegisterCommand command = RegisterCommandBuilder.Create() with { Password = "123" };
+        ValidationError[] expectedErrors = [new ValidationError(
+            "Password", 
+            UserErrors.Validation.Password.MinimumLengthMessage(6))]; //TODO: Change length with IdentityOptions PasswordOptions
+    
+        // Act
+        Func<Task> act = () => Sender.Send(command, default);
+    
+        // Assert
+        ExceptionAssertions<ValidationException>? e = await act.Should().ThrowAsync<ValidationException>();
+        e.WithMessage("One or more validation errors occurs");
+        e.Subject.Single().Errors.Should().BeEquivalentTo(expectedErrors);
+    }
+
+    [Fact]
+    public async Task CreateUser_ShouldThrowError_WhenUsernameIsEmpty()
+    {
+        // Arrange
+        RegisterCommand command = RegisterCommandBuilder.Create() with { UserName = "" };
+        ValidationError[] expectedErrors = [new ValidationError(
+            "UserName", 
+            UserErrors.Validation.Username.NotEmpty)];
+    
+        // Act
+        Func<Task> act = () => Sender.Send(command, default);
+    
+        // Assert
+        ExceptionAssertions<ValidationException>? e = await act.Should().ThrowAsync<ValidationException>();
+        e.WithMessage("One or more validation errors occurs");
+        e.Subject.Single().Errors.Should().BeEquivalentTo(expectedErrors);
     }
 }

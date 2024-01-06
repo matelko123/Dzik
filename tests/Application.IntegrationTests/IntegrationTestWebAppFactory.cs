@@ -23,14 +23,14 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<IApiMarker>, I
         builder.ConfigureTestServices(services =>
         {
             var descriptor = services
-                .SingleOrDefault(x => x.ServiceType == typeof(DbContextOptions<BaseDbContext>));
+                .SingleOrDefault(x => x.ServiceType == typeof(DbContextOptions<AppDbContext>));
 
             if (descriptor is not null)
             {
                 services.Remove(descriptor);
             }
 
-            services.AddDbContext<BaseDbContext>(opt =>
+            services.AddDbContext<AppDbContext>(opt =>
             {
                 opt
                     .UseNpgsql(_dbContainer.GetConnectionString());

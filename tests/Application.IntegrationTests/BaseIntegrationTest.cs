@@ -8,12 +8,12 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>
 {
     private readonly IServiceScope _scope;
     protected readonly ISender Sender;
-    protected readonly BaseDbContext DbContext;
+    protected readonly AppDbContext DbContext;
     
     public BaseIntegrationTest(IntegrationTestWebAppFactory factory)
     {
         _scope = factory.Services.CreateScope();
         Sender = _scope.ServiceProvider.GetRequiredService<ISender>();
-        DbContext = _scope.ServiceProvider.GetRequiredService<BaseDbContext>();
+        DbContext = _scope.ServiceProvider.GetRequiredService<AppDbContext>();
     }
 }
