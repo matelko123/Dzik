@@ -53,3 +53,10 @@ internal class IdentityUserTokenConfiguration : IEntityTypeConfiguration<Identit
         builder
             .ToTable("UserTokens", SchemaNames.Identity);
 }
+
+internal class RefreshTokenConfiguration : IEntityTypeConfiguration<AppRefreshToken>
+{
+    public void Configure(EntityTypeBuilder<AppRefreshToken> builder) =>
+        builder
+            .ToTable("RefreshTokens", SchemaNames.Identity);
+}
