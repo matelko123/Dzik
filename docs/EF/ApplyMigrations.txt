@@ -1,11 +1,11 @@
 To add migration:
-dotnet ef migrations add [Name] -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c BaseDbContext
+dotnet ef migrations add [Name] -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c AppDbContext
 
 To remove migration:
-dotnet ef migrations remove -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c BaseDbContext
+dotnet ef migrations remove -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c AppDbContext
 
 To apply migrations:
-dotnet ef database update -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c BaseDbContext
+dotnet ef database update -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c AppDbContext
 
 To unapply migrations:
-dotnet ef database update 0 -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c BaseDbContext
+dotnet ef database update 0 -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c AppDbContext
