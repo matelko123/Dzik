@@ -32,8 +32,8 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<IApiMarker>, I
 
             services.AddDbContext<AppDbContext>(opt =>
             {
-                opt
-                    .UseNpgsql(_dbContainer.GetConnectionString());
+                opt.UseNpgsql(_dbContainer.GetConnectionString(), e =>
+                    e.MigrationsAssembly("Migrators.PostgreSQL"));
             });
         });
     }

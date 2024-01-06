@@ -5,9 +5,9 @@ using FluentAssertions.Specialized;
 
 namespace Application.IntegrationTests.Identity.AuthEndpointsTests;
 
-public class CreateUserTests : BaseIntegrationTest
+public class RegisterCommandTests : BaseIntegrationTest
 {
-    public CreateUserTests(IntegrationTestWebAppFactory factory)
+    public RegisterCommandTests(IntegrationTestWebAppFactory factory)
         : base(factory)
     {
     }
@@ -73,6 +73,66 @@ public class CreateUserTests : BaseIntegrationTest
     
         // Act
         Func<Task> act = () => Sender.Send(command, default);
+    
+        // Assert
+        ExceptionAssertions<ValidationException>? e = await act.Should().ThrowAsync<ValidationException>();
+        e.WithMessage("One or more validation errors occurs");
+        e.Subject.Single().Errors.Should().BeEquivalentTo(expectedErrors);
+    }
+    
+    [Fact]
+    public async Task CreateUser_ShouldThrowError_WhenUsernameAlreadyTaken()
+    {
+        // Arrange
+        RegisterCommand command = RegisterCommandBuilder.Create();
+        RegisterCommand command2 = RegisterCommandBuilder.Create() with { UserName = command.UserName };
+        ValidationError[] expectedErrors = [new ValidationError(
+            "UserName", 
+            UserErrors.Validation.Username.AlreadyTaken(command.UserName))];
+    
+        // Act
+        await Sender.Send(command, default);
+        Func<Task> act = () => Sender.Send(command2, default);
+    
+        // Assert
+        ExceptionAssertions<ValidationException>? e = await act.Should().ThrowAsync<ValidationException>();
+        e.WithMessage("One or more validation errors occurs");
+        e.Subject.Single().Errors.Should().BeEquivalentTo(expectedErrors);
+    }
+    
+    [Fact]
+    public async Task CreateUser_ShouldThrowError_WhenEmailAlreadyTaken()
+    {
+        // Arrange
+        RegisterCommand command = RegisterCommandBuilder.Create();
+        RegisterCommand command2 = RegisterCommandBuilder.Create() with { Email = command.Email };
+        ValidationError[] expectedErrors = [new ValidationError(
+            "Email", 
+            UserErrors.Validation.Email.AlreadyTaken(command.Email))];
+    
+        // Act
+        await Sender.Send(command, default);
+        Func<Task> act = () => Sender.Send(command2, default);
+    
+        // Assert
+        ExceptionAssertions<ValidationException>? e = await act.Should().ThrowAsync<ValidationException>();
+        e.WithMessage("One or more validation errors occurs");
+        e.Subject.Single().Errors.Should().BeEquivalentTo(expectedErrors);
+    }
+    
+    [Fact]
+    public async Task CreateUser_ShouldThrowError_WhenPhoneNumberAlreadyTaken()
+    {
+        // Arrange
+        RegisterCommand command = RegisterCommandBuilder.Create();
+        RegisterCommand command2 = RegisterCommandBuilder.Create() with { PhoneNumber = command.PhoneNumber };
+        ValidationError[] expectedErrors = [new ValidationError(
+            "PhoneNumber", 
+            UserErrors.Validation.PhoneNumber.AlreadyTaken(command.PhoneNumber))];
+    
+        // Act
+        await Sender.Send(command, default);
+        Func<Task> act = () => Sender.Send(command2, default);
     
         // Assert
         ExceptionAssertions<ValidationException>? e = await act.Should().ThrowAsync<ValidationException>();

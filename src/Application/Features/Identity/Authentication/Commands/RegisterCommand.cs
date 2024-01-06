@@ -17,7 +17,7 @@ public sealed record RegisterCommand(
     string UserName,
     string Email,
     string Password,
-    string? PhoneNumber
+    string PhoneNumber
     ) : ICommand<Result<Guid>>;
 
 public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
