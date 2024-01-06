@@ -1,11 +1,16 @@
+/src/Host
+
 To add migration:
-dotnet ef migrations add [Name] -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c AppDbContext
+dotnet ef migrations add [Name] --project ..\Migrators\Migrators.PostgreSQL\  --context AppDbContext -o Migrations/Application
 
 To remove migration:
-dotnet ef migrations remove -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c AppDbContext
+dotnet ef migrations remove --project ..\Migrators\Migrators.PostgreSQL\  --context AppDbContext -o Migrations/Application
 
 To apply migrations:
-dotnet ef database update -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c AppDbContext
+dotnet ef database update --project ..\Migrators\Migrators.PostgreSQL\  --context AppDbContext
 
 To unapply migrations:
-dotnet ef database update 0 -s .\Host\Host.csproj -p .\Infrastructure\Infrastructure.csproj -c AppDbContext
+dotnet ef database update 0 --project ..\Migrators\Migrators.PostgreSQL\  --context AppDbContext
+
+
+

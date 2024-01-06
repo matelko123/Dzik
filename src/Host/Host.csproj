@@ -30,6 +30,7 @@
       <ProjectReference Include="..\Application\Application.csproj" />
       <ProjectReference Include="..\Contracts\Contracts.csproj" />
       <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+      <ProjectReference Include="..\Migrators\Migrators.PostgreSQL\Migrators.PostgreSQL.csproj" />
       <ProjectReference Include="..\Shared\Shared.csproj" />
     </ItemGroup>
 
