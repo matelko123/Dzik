@@ -19,6 +19,7 @@ public class TokenService: ITokenService
     private readonly IClock _clock;
     private readonly JwtSettings _jwtSettings;
     private readonly UserManager<AppUser> _userManager;
+    private readonly RoleManager<AppUser> _roleManager;
     private readonly IRefreshTokenService _refreshTokenService;
 
     private readonly TimeSpan _expiry;
@@ -27,41 +28,32 @@ public class TokenService: ITokenService
         IClock clock,
         IOptions<JwtSettings> jwtSettings, 
         UserManager<AppUser> userManager, 
+        RoleManager<AppUser> roleManager,
         IRefreshTokenService refreshTokenService)
     {
         _clock = clock;
         _userManager = userManager;
         _refreshTokenService = refreshTokenService;
+        _roleManager = roleManager;
         _jwtSettings = jwtSettings.Value;
             
         _expiry = _jwtSettings.TokenExpiration ?? TimeSpan.FromHours(1);
     }
-    
-    private SigningCredentials GetSigningCredentials()
-    {
-        var secret = Encoding.UTF8.GetBytes(_jwtSettings.SigningKey);
-        return new SigningCredentials(new SymmetricSecurityKey(secret), SecurityAlgorithms.HmacSha256);
-    }
-    
-    private static IEnumerable<Claim> GetClaims(AppUser user) =>
-        new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email!),
-            new(ClaimTypes.Name, user.FirstName ?? string.Empty),
-            new(ClaimTypes.Surname, user.LastName ?? string.Empty),
-            new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
-        };
-    
+
     public async Task<Result<TokenResponse>> CreateTokenAsync(AppUser user, CancellationToken cancellationToken = default)
     {
-        var now = _clock.Current();
-        var expires = now.Add(_expiry);
+        DateTime now = _clock.Current();
+        DateTime expires = now.Add(_expiry);
 
-        var token = GenerateJwt(user, expires);
+        string token = await GenerateJwt(user, expires);
 
-        var refreshToken = await _refreshTokenService.GenerateRefreshTokenAsync(user.Id, cancellationToken);
-        return new TokenResponse(token, refreshToken.Data, expires);
+        Result<string> refreshToken = await _refreshTokenService.GenerateRefreshTokenAsync(user.Id, cancellationToken);
+        if (!refreshToken)
+        {
+            return await Result<TokenResponse>.FailAsync(refreshToken);
+        }
+        
+        return new TokenResponse(token, refreshToken.Data!, expires);
     }
     
     public async Task<Result<TokenResponse>> RefreshTokenAsync(string token, string refreshToken, CancellationToken cancellationToken = default)
@@ -72,9 +64,9 @@ public class TokenService: ITokenService
             return await Result<TokenResponse>.FailAsync(userPrincipal.Messages);
         }
         
-        string? userEmail = userPrincipal.Data.GetEmail();
+        string? userEmail = userPrincipal.Data?.GetEmail();
         
-        var user = await _userManager.FindByEmailAsync(userEmail!);
+        AppUser? user = await _userManager.FindByEmailAsync(userEmail!);
         if (user is null)
         {
             return await Result<TokenResponse>.FailAsync("Authentication Failed.");
@@ -88,24 +80,24 @@ public class TokenService: ITokenService
         return await CreateTokenAsync(user, cancellationToken);
     }
     
-    private string GenerateJwt(AppUser user, DateTime expires) =>
-        GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user), expires);
+    private async Task<string> GenerateJwt(AppUser user, DateTime expires) =>
+        GenerateEncryptedToken(GetSigningCredentials(), await GetClaims(user), expires);
     
     private string GenerateEncryptedToken(SigningCredentials signingCredentials, IEnumerable<Claim> claims, DateTime expires)
     {
-        var token = new JwtSecurityToken(
+        JwtSecurityToken token = new JwtSecurityToken(
             claims: claims,
             expires: expires,
             audience: _jwtSettings.Audience,
             issuer: _jwtSettings.Issuer,
             signingCredentials: signingCredentials);
-        var tokenHandler = new JwtSecurityTokenHandler();
+        JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
         return tokenHandler.WriteToken(token);
     }
     
     private Result<ClaimsPrincipal> GetPrincipalFromExpiredToken(string token)
     {
-        var tokenValidationParameters = new TokenValidationParameters
+        TokenValidationParameters tokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SigningKey)),
@@ -115,8 +107,8 @@ public class TokenService: ITokenService
             ClockSkew = TimeSpan.Zero,
             ValidateLifetime = false
         };
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+        JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+        ClaimsPrincipal? principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken? securityToken);
         if (securityToken is not JwtSecurityToken jwtSecurityToken ||
             !jwtSecurityToken.Header.Alg.Equals(
                 SecurityAlgorithms.HmacSha256,
@@ -126,5 +118,43 @@ public class TokenService: ITokenService
         }
 
         return principal;
+    }
+        
+    private SigningCredentials GetSigningCredentials()
+    {
+        byte[] secret = Encoding.UTF8.GetBytes(_jwtSettings.SigningKey);
+        return new SigningCredentials(new SymmetricSecurityKey(secret), SecurityAlgorithms.HmacSha256);
+    }
+
+    private async Task<IEnumerable<Claim>> GetClaims(AppUser user)
+    {
+        IList<Claim> userClaims = await _userManager.GetClaimsAsync(user);
+        IList<string> roles = await _userManager.GetRolesAsync(user);
+        List<Claim> roleClaims = new();
+        List<Claim> permissionClaims = new();
+        
+        foreach (string role in roles)
+        {
+            roleClaims.Add(new Claim(ClaimTypes.Role, role));
+            AppUser? thisRole = await _roleManager.FindByNameAsync(role);
+            if (thisRole == null) continue;
+            
+            IList<Claim> allPermissionsForThisRoles = await _roleManager.GetClaimsAsync(thisRole);
+            permissionClaims.AddRange(allPermissionsForThisRoles);
+        }
+        
+        IEnumerable<Claim> claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Email, user.Email!),
+                new(ClaimTypes.Name, user.FirstName ?? string.Empty),
+                new(ClaimTypes.Surname, user.LastName ?? string.Empty),
+                new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
+            }
+            .Union(userClaims)
+            .Union(roleClaims)
+            .Union(permissionClaims);
+        
+        return claims;
     }
 }

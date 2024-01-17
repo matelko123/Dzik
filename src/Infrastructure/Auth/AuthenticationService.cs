@@ -46,7 +46,7 @@ public class AuthenticationService : SignInManager<AppUser>, IAuthenticationServ
 
     public async Task<Result<TokenResponse>> LoginAsync(string email, string password, bool isPersistent, CancellationToken cancellationToken = default)
     {
-        var user = await UserManager.FindByEmailAsync(email);
+        AppUser? user = await UserManager.FindByEmailAsync(email);
         if (user is null)
         {
             return await Result<TokenResponse>.FailAsync(UserErrors.NotFound);

@@ -75,6 +75,9 @@ public class Result<T> : Result, IResult<T>
         => new(messages, false);
     public new static Task<Result<T>> FailAsync()
         => Task.FromResult(Fail());
+
+    public new static Task<Result<T>> FailAsync(Result result)
+        => FailAsync(result.Messages);
     public new static Task<Result<T>> FailAsync(List<string> messages)
         => Task.FromResult(Fail(messages));
     public new static Task<Result<T>> FailAsync(params string[] messages)
