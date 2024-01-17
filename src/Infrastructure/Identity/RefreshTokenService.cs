@@ -33,35 +33,28 @@ public class RefreshTokenService : IRefreshTokenService
             ExpiryDate = currentDate.AddDays(7),
         };
         
-        // Revoke all tokens per user
-        Result<IEnumerable<AppRefreshToken>> activeTokens = await GetRefreshTokensAsync(userId, cancellationToken);
-        _ = activeTokens.Data?.Select(x => x.IsRevoked = true);
+        // Revoke all user's tokens
+        await RevokeAllTokensForUser(userId, cancellationToken);
 
         // Save changes
         _dbContext.RefreshTokens.Add(refreshToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
         return token;
     }
-    
-    private static string GenerateRefreshToken()
-    {
-        byte[] randomNumber = new byte[32];
-        using RandomNumberGenerator rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomNumber);
-        return Convert.ToBase64String(randomNumber);
-    }
+
 
     public async Task<Result<AppRefreshToken?>> GetRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
     {
         return await _dbContext.RefreshTokens.SingleOrDefaultAsync(x => x.Token == token, cancellationToken);
     }
 
-    public async Task<Result<IEnumerable<AppRefreshToken>>> GetRefreshTokensAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<Result<IReadOnlyCollection<AppRefreshToken>>> GetRefreshTokensAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _dbContext.RefreshTokens
             .Where(x => x.UserId == userId)
             .Where(x => !x.IsRevoked)
             .OrderByDescending(x => x.CreatedDate)
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 
@@ -71,5 +64,23 @@ public class RefreshTokenService : IRefreshTokenService
         Result<AppRefreshToken?>? refreshToken = await GetRefreshTokenAsync(token, cancellationToken);
 
         return refreshToken?.Data is not null && !refreshToken.Data.IsRevoked && refreshToken.Data.ExpiryDate > currentDate;
+    }
+
+    public async Task RevokeAllTokensForUser(Guid userId, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.RefreshTokens
+            .Where(x => x.UserId == userId)
+            .Where(x => !x.IsRevoked)
+            .ExecuteUpdateAsync(t =>
+                t.SetProperty(b => b.IsRevoked, b => true), cancellationToken);
+    }
+    
+        
+    private static string GenerateRefreshToken()
+    {
+        byte[] randomNumber = new byte[32];
+        using RandomNumberGenerator rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
     }
 }
