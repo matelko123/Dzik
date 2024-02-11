@@ -14,21 +14,21 @@ using Shared.Authorization;
 
 namespace Infrastructure.Identity;
 
-public class TokenService: ITokenService
+public class TokenService : ITokenService
 {
     private readonly IClock _clock;
     private readonly JwtSettings _jwtSettings;
     private readonly UserManager<AppUser> _userManager;
-    private readonly RoleManager<AppUser> _roleManager;
+    private readonly RoleManager<AppRole> _roleManager;
     private readonly IRefreshTokenService _refreshTokenService;
 
     private readonly TimeSpan _expiry;
 
     public TokenService(
         IClock clock,
-        IOptions<JwtSettings> jwtSettings, 
-        UserManager<AppUser> userManager, 
-        RoleManager<AppUser> roleManager,
+        IOptions<JwtSettings> jwtSettings,
+        UserManager<AppUser> userManager,
+        RoleManager<AppRole> roleManager,
         IRefreshTokenService refreshTokenService)
     {
         _clock = clock;
@@ -36,7 +36,7 @@ public class TokenService: ITokenService
         _refreshTokenService = refreshTokenService;
         _roleManager = roleManager;
         _jwtSettings = jwtSettings.Value;
-            
+
         _expiry = _jwtSettings.TokenExpiration ?? TimeSpan.FromHours(1);
     }
 
@@ -52,10 +52,10 @@ public class TokenService: ITokenService
         {
             return await Result<TokenResponse>.FailAsync(refreshToken);
         }
-        
+
         return new TokenResponse(token, refreshToken.Data!, expires);
     }
-    
+
     public async Task<Result<TokenResponse>> RefreshTokenAsync(string token, string refreshToken, CancellationToken cancellationToken = default)
     {
         Result<ClaimsPrincipal> userPrincipal = GetPrincipalFromExpiredToken(token);
@@ -63,15 +63,15 @@ public class TokenService: ITokenService
         {
             return await Result<TokenResponse>.FailAsync(userPrincipal.Messages);
         }
-        
+
         string? userEmail = userPrincipal.Data?.GetEmail();
-        
+
         AppUser? user = await _userManager.FindByEmailAsync(userEmail!);
         if (user is null)
         {
             return await Result<TokenResponse>.FailAsync("Authentication Failed.");
         }
-        
+
         if (!await _refreshTokenService.ValidateAsync(refreshToken, cancellationToken))
         {
             return await Result<TokenResponse>.FailAsync("Invalid Refresh Token.");
@@ -79,10 +79,10 @@ public class TokenService: ITokenService
 
         return await CreateTokenAsync(user, cancellationToken);
     }
-    
+
     private async Task<string> GenerateJwt(AppUser user, DateTime expires) =>
         GenerateEncryptedToken(GetSigningCredentials(), await GetClaims(user), expires);
-    
+
     private string GenerateEncryptedToken(SigningCredentials signingCredentials, IEnumerable<Claim> claims, DateTime expires)
     {
         JwtSecurityToken token = new JwtSecurityToken(
@@ -94,7 +94,7 @@ public class TokenService: ITokenService
         JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
         return tokenHandler.WriteToken(token);
     }
-    
+
     private Result<ClaimsPrincipal> GetPrincipalFromExpiredToken(string token)
     {
         TokenValidationParameters tokenValidationParameters = new TokenValidationParameters
@@ -119,7 +119,7 @@ public class TokenService: ITokenService
 
         return principal;
     }
-        
+
     private SigningCredentials GetSigningCredentials()
     {
         byte[] secret = Encoding.UTF8.GetBytes(_jwtSettings.SigningKey);
@@ -132,29 +132,29 @@ public class TokenService: ITokenService
         IList<string> roles = await _userManager.GetRolesAsync(user);
         List<Claim> roleClaims = new();
         List<Claim> permissionClaims = new();
-        
+
         foreach (string role in roles)
         {
             roleClaims.Add(new Claim(ClaimTypes.Role, role));
-            AppUser? thisRole = await _roleManager.FindByNameAsync(role);
+            AppRole? thisRole = await _roleManager.FindByNameAsync(role);
             if (thisRole == null) continue;
-            
+
             IList<Claim> allPermissionsForThisRoles = await _roleManager.GetClaimsAsync(thisRole);
             permissionClaims.AddRange(allPermissionsForThisRoles);
         }
-        
-        IEnumerable<Claim> claims = new List<Claim>
-            {
-                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new(ClaimTypes.Email, user.Email!),
-                new(ClaimTypes.Name, user.FirstName ?? string.Empty),
-                new(ClaimTypes.Surname, user.LastName ?? string.Empty),
-                new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
-            }
+
+        IEnumerable<Claim> customUserClaims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Email, user.Email!),
+            new(ClaimTypes.Name, user.FirstName ?? string.Empty),
+            new(ClaimTypes.Surname, user.LastName ?? string.Empty),
+            new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
+        };
+
+        return customUserClaims
             .Union(userClaims)
             .Union(roleClaims)
             .Union(permissionClaims);
-        
-        return claims;
     }
 }
