@@ -1,9 +1,6 @@
-using System.Security.Claims;
 using Application.Features.Identity.Authentication.Commands;
 using Application.Features.Identity.Tokens.Commands;
-using Application.Features.Identity.Users.Queries;
 using Contracts.Identity.Authentication;
-using Domain.Entities.Identity;
 using Host.Endpoints.Internal;
 using Host.Middleware;
 using Mapster;
@@ -11,6 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Authorization;
 using Shared.Wrapper;
+using System.Security.Claims;
 
 namespace Host.Endpoints.Identity;
 
@@ -22,7 +20,9 @@ public class AuthEndpoints : IEndpoints
 
     public static void DefineEndpoints(IEndpointRouteBuilder app)
     {
-        app.MapPost($"{BaseRoute}/register", async (
+        var authGroup = app.MapGroup(BaseRoute);
+
+        authGroup.MapPost("/register", async (
                 [FromBody] RegisterRequest request,
                 ISender sender, CancellationToken cancellationToken) =>
             {
@@ -38,7 +38,8 @@ public class AuthEndpoints : IEndpoints
             .Produces<Guid>(StatusCodes.Status201Created)
             .Produces<ErrorResult>(StatusCodes.Status422UnprocessableEntity);
 
-        app.MapPost($"{BaseRoute}/login", async (
+
+        authGroup.MapPost("/login", async (
                 [FromBody] LoginRequest request,
                 ISender sender, CancellationToken cancellationToken) =>
             {
@@ -54,7 +55,7 @@ public class AuthEndpoints : IEndpoints
             .Produces<TokenResponse>();
 
 
-        app.MapPost($"{BaseRoute}/refresh", async (
+        authGroup.MapPost("/refresh", async (
                 [FromBody] RefreshTokenCommand request,
                 ISender sender, CancellationToken cancellationToken) =>
             {
@@ -69,7 +70,8 @@ public class AuthEndpoints : IEndpoints
             .Produces<TokenResponse>()
             .RequireAuthorization();
 
-        app.MapPost($"{BaseRoute}/info", (
+
+        authGroup.MapPost("/info", (
                 ClaimsPrincipal claims) =>
             {
                 var result = new
