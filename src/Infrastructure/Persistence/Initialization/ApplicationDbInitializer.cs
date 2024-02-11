@@ -11,7 +11,7 @@ internal sealed class ApplicationDbInitializer
     private readonly ILogger<ApplicationDbInitializer> _logger;
 
     public ApplicationDbInitializer(
-        AppDbContext dbContext, 
+        AppDbContext dbContext,
         ApplicationDbSeeder dbSeeder,
         ILogger<ApplicationDbInitializer> logger)
     {
@@ -19,23 +19,26 @@ internal sealed class ApplicationDbInitializer
         _dbSeeder = dbSeeder;
         _logger = logger;
     }
-    
+
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        if (_dbContext.Database.GetMigrations().Any())
+        if (!await _dbContext.Database.CanConnectAsync(cancellationToken))
         {
-            if ((await _dbContext.Database.GetPendingMigrationsAsync(cancellationToken)).Any())
-            {
-                _logger.LogInformation("Applying Migrations");
-                await _dbContext.Database.MigrateAsync(cancellationToken);
-            }
-
-            if (await _dbContext.Database.CanConnectAsync(cancellationToken))
-            {
-                _logger.LogInformation("Connection to Database Succeeded.");
-
-                await _dbSeeder.SeedDatabaseAsync(_dbContext, cancellationToken);
-            }
+            throw new ApplicationException($"Can't connect to database {_dbContext.Connection.Database} with provider {_dbContext.Database.ProviderName}.");
         }
+        _logger.LogInformation("Connection to database succeeded.");
+
+        if (!_dbContext.Database.GetMigrations().Any())
+        {
+            return;
+        }
+
+        if ((await _dbContext.Database.GetPendingMigrationsAsync(cancellationToken)).Any())
+        {
+            _logger.LogInformation("Applying migrations");
+            await _dbContext.Database.MigrateAsync(cancellationToken);
+        }
+
+        await _dbSeeder.SeedDatabaseAsync(_dbContext, cancellationToken);
     }
 }
