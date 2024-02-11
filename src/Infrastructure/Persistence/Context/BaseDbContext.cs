@@ -1,12 +1,13 @@
 using System.Data;
 using Domain.Entities.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Context;
 
 public abstract class BaseDbContext(DbContextOptions options)
-    : IdentityDbContext<AppUser, AppRole, Guid>(options)
+    : IdentityDbContext<AppUser, AppRole, Guid, IdentityUserClaim<Guid>, IdentityUserRole<Guid>, IdentityUserLogin<Guid>, AppRoleClaim, IdentityUserToken<Guid>>(options)
 {
     // Used by Dapper
     public IDbConnection Connection => Database.GetDbConnection();
