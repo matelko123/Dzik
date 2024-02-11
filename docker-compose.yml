@@ -3,13 +3,31 @@ version: '3.4'
 networks:
   dev:
     
+
 volumes:
   app_data:
 
+
 services:
-  dzik.db:
+  api:
+    container_name: dzik.api
+    depends_on: 
+      - "db"
+    image: ${DOCKER_REGISTRY-}host
+    build:
+      context: .
+      dockerfile: src/Host/Dockerfile
+    environment:
+      - DatabaseSettings__ConnectionString=User ID=dziku;Password=dziku123;Host=dzik.db;Port=5432;Database=dzik;
+    ports:
+      - 8080:8080
+    networks: 
+      - dev
+
+  db:
+    container_name: dzik.db
     image: postgres:latest
-    container_name: dzik-db
+    restart: always
     environment:
       - POSTGRES_DB=dzik
       - POSTGRES_USER=dziku
@@ -19,19 +37,4 @@ services:
     ports:
       - 5432:5432
     networks:
-      - dev
-    
-  dzik.api:
-    image: ${DOCKER_REGISTRY-}host
-    container_name: dzik-api
-    depends_on: 
-      - "dzik.db"
-    build:
-      context: .
-      dockerfile: src/Host/Dockerfile
-    environment:
-      - ConnectionStrings__Default=User ID=dziku;Password=dziku123;Server=dzik.db;Port=5432;Database=dzik;
-    ports:
-      - 8080:8080
-    networks: 
       - dev

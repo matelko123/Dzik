@@ -11,16 +11,19 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["src/Host/Host.csproj", "src/Host/"]
 COPY ["src/Application/Application.csproj", "src/Application/"]
+COPY ["src/Contracts/Contracts.csproj", "src/Contracts/"]
 COPY ["src/Domain/Domain.csproj", "src/Domain/"]
 COPY ["src/Shared/Shared.csproj", "src/Shared/"]
 COPY ["src/Infrastructure/Infrastructure.csproj", "src/Infrastructure/"]
-RUN dotnet restore "src/Host/Host.csproj"
+COPY ["src/Migrators/Migrators.PostgreSQL/Migrators.PostgreSQL.csproj", "src/Migrators/Migrators.PostgreSQL/"]
+RUN dotnet restore "./src/Host/./Host.csproj"
 COPY . .
 WORKDIR "/src/src/Host"
-RUN dotnet build "Host.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "./Host.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Host.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./Host.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

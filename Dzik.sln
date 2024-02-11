@@ -19,8 +19,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{91334A37
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application.IntegrationTests", "tests\Application.IntegrationTests\Application.IntegrationTests.csproj", "{815EA1BB-B775-4022-BBD0-1ACFC1C16E8A}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{7D40777B-44BD-40DD-AB4F-0B4EB1B3C746}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{80D53301-09C2-407D-ACBB-D04329286307}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Requests", "Requests", "{97D745A0-4E9D-444B-B328-F8303F961515}"
@@ -29,13 +27,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Requests", "Requests", "{97
 		docs\Auth\user.http = docs\Auth\user.http
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "src\Contracts\Contracts.csproj", "{6CCC7B51-C072-434B-845F-E82A610FC221}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Contracts", "src\Contracts\Contracts.csproj", "{6CCC7B51-C072-434B-845F-E82A610FC221}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArchitectureTests", "tests\ArchitectureTests\ArchitectureTests.csproj", "{14A617BD-7A84-4279-AFE8-721537C23998}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArchitectureTests", "tests\ArchitectureTests\ArchitectureTests.csproj", "{14A617BD-7A84-4279-AFE8-721537C23998}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Migrators", "Migrators", "{1459A59E-8556-491B-BD16-9B468CCD5874}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Migrators.PostgreSQL", "src\Migrators\Migrators.PostgreSQL\Migrators.PostgreSQL.csproj", "{00D2F92D-F2B0-4690-AA5F-3EE78310BCC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Migrators.PostgreSQL", "src\Migrators\Migrators.PostgreSQL\Migrators.PostgreSQL.csproj", "{00D2F92D-F2B0-4690-AA5F-3EE78310BCC3}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{067583D5-5006-4683-BC06-707FEBD72A6F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,10 +67,6 @@ Global
 		{815EA1BB-B775-4022-BBD0-1ACFC1C16E8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{815EA1BB-B775-4022-BBD0-1ACFC1C16E8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{815EA1BB-B775-4022-BBD0-1ACFC1C16E8A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7D40777B-44BD-40DD-AB4F-0B4EB1B3C746}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7D40777B-44BD-40DD-AB4F-0B4EB1B3C746}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7D40777B-44BD-40DD-AB4F-0B4EB1B3C746}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7D40777B-44BD-40DD-AB4F-0B4EB1B3C746}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6CCC7B51-C072-434B-845F-E82A610FC221}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6CCC7B51-C072-434B-845F-E82A610FC221}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CCC7B51-C072-434B-845F-E82A610FC221}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -83,6 +79,10 @@ Global
 		{00D2F92D-F2B0-4690-AA5F-3EE78310BCC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00D2F92D-F2B0-4690-AA5F-3EE78310BCC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00D2F92D-F2B0-4690-AA5F-3EE78310BCC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{067583D5-5006-4683-BC06-707FEBD72A6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{067583D5-5006-4683-BC06-707FEBD72A6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{067583D5-5006-4683-BC06-707FEBD72A6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{067583D5-5006-4683-BC06-707FEBD72A6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
