@@ -1,3 +1,5 @@
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
 namespace Shared.Wrapper;
 
 public class Result : IResult
@@ -17,7 +19,12 @@ public class Result : IResult
 
     public static implicit operator Result(bool isSuccess) => new(isSuccess);
     public static implicit operator bool(Result result) => result.Succeeded;
-    
+
+    public TR Match<TR>(Func<TR> success, Func<List<string>, TR> fail) =>
+        Succeeded
+            ? success()
+            : fail(Messages);
+
     public static Result Fail() 
         => new Result(false);
     public static Result Fail(List<string> messages) 
