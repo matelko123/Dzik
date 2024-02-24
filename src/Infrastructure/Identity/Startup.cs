@@ -1,3 +1,6 @@
+using Application.Identity.Roles;
+using Application.Identity.Tokens;
+using Application.Identity.Users;
 using Domain.Entities.Identity;
 using Infrastructure.Persistence.Context;
 using Microsoft.AspNetCore.Identity;
@@ -10,6 +13,10 @@ internal static class Startup
     internal static IServiceCollection AddIdentity(this IServiceCollection services)
     {
         return services
+            .AddTransient<IRefreshTokenService, RefreshTokenService>()
+            .AddTransient<IRoleService, RoleService>()
+            .AddTransient<ITokenService, TokenService>()
+            .AddTransient<IUserService, UserService>()
             .AddIdentity<AppUser, AppRole>(options =>
             {
                 options.Password.RequiredLength = 6;

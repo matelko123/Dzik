@@ -1,3 +1,5 @@
+using Application.Identity.Auth;
+using Application.Identity.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -13,7 +15,10 @@ internal static class Startup
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
+        services
+            .AddTransient<IAuthenticationService, AuthenticationService>()
+            .AddSingleton<ITokenStorage, HttpContextTokenStorage>()
+            .AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
 
         return services
             .AddAuthentication(authentication =>

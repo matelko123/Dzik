@@ -4,7 +4,7 @@ using Shared.Wrapper;
 
 namespace Application.Identity.Tokens;
 
-public interface IRefreshTokenService : ITransientService
+public interface IRefreshTokenService
 {
     /// <summary>
     /// Create new refresh token.

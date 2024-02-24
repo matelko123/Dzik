@@ -1,11 +1,10 @@
-using Application.Common.Interfaces;
 using Contracts.Identity.Authentication;
 using Domain.Entities.Identity;
 using Shared.Wrapper;
 
 namespace Application.Identity.Auth;
 
-public interface IAuthenticationService : ITransientService
+public interface IAuthenticationService
 {
     Task<Result<Guid>> RegisterUserAsync(AppUser user, string password, CancellationToken cancellationToken = default);
 

@@ -1,6 +1,6 @@
 namespace Application.Common.Interfaces;
 
-public interface IClock : ISingletonService
+public interface IClock
 {
     DateTime Current();
 }

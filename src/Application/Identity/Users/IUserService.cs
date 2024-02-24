@@ -2,7 +2,7 @@ using Application.Common.Interfaces;
 
 namespace Application.Identity.Users;
 
-public interface IUserService : ITransientService
+public interface IUserService
 {
     Task<bool> ExistsWithNameAsync(string name);
     Task<bool> ExistsWithEmailAsync(string email, Guid? exceptId = null);

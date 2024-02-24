@@ -6,7 +6,7 @@ using Shared.Wrapper;
 
 namespace Application.Identity.Roles;
 
-public interface IRoleService : ITransientService
+public interface IRoleService
 {
     Task<Result<List<AppRole>>> GetListAsync(CancellationToken cancellationToken = default);
     Task<Result<List<FSHPermission>>> GetAllPermissionsAsync(CancellationToken cancellationToken = default);

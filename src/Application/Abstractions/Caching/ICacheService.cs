@@ -2,7 +2,7 @@ using Application.Common.Interfaces;
 
 namespace Application.Abstractions.Caching;
 
-public interface ICacheService : ISingletonService
+public interface ICacheService
 {
     Task<T> GetOrCreateAsync<T>(
         string key,
