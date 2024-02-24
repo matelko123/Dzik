@@ -4,7 +4,6 @@ using Contracts.Identity.Roles;
 using Domain.Entities.Identity;
 using Infrastructure.Persistence.Context;
 using Mapster;
-using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Shared.Authorization;
@@ -12,7 +11,6 @@ using Shared.Authorization.Constants.Permission;
 using Shared.Authorization.Constants.Role;
 using Shared.Wrapper;
 using System.Data;
-using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 
 namespace Infrastructure.Identity;
@@ -23,10 +21,10 @@ public class RoleService(
     UserManager<AppUser> userManager)
     : IRoleService
 {
-    public async Task<Result<List<AppRole>>> GetListAsync(CancellationToken cancellationToken)
+    public async Task<Result<List<RoleDto>>> GetListAsync(CancellationToken cancellationToken)
     {
         var roles = await roleManager.Roles.ToListAsync(cancellationToken);
-        return Result<List<AppRole>>.Success(roles);
+        return Result<List<RoleDto>>.Success(roles.Adapt<List<RoleDto>>());
     }
 
     public async Task<int> GetCountAsync(CancellationToken cancellationToken)
@@ -34,13 +32,13 @@ public class RoleService(
         return await roleManager.Roles.CountAsync(cancellationToken);
     }
 
-    public async Task<Result<AppRole>> GetByIdAsync(Guid roleId, CancellationToken cancellationToken)
+    public async Task<Result<RoleDto>> GetByIdAsync(Guid roleId, CancellationToken cancellationToken)
     {
         var role = await roleManager.FindByIdAsync(roleId.ToString());
 
         return role is null
-            ? Result<AppRole>.Fail(RoleErrors.NotFound)
-            : Result<AppRole>.Success(role);
+            ? Result<RoleDto>.Error(RoleErrors.NotFound)
+            : Result<RoleDto>.Success(role.Adapt<RoleDto>());
     }
 
     public async Task<Result<RoleDto>> GetByIdWithPermissionsAsync(Guid roleId, CancellationToken cancellationToken = default)
@@ -48,7 +46,7 @@ public class RoleService(
         var existingRole = await roleManager.FindByIdAsync(roleId.ToString());
         if (existingRole is null)
         {
-            return Result<RoleDto>.Fail(RoleErrors.NotFound);
+            return Result<RoleDto>.Error(RoleErrors.NotFound);
         }
 
         IList<Claim> roleClaims = await roleManager.GetClaimsAsync(existingRole);
@@ -69,13 +67,13 @@ public class RoleService(
         return Result<RoleDto>.Success(response);
     }
 
-    public async Task<Result<AppRole>> GetByNameAsync(string name, CancellationToken cancellationToken)
+    public async Task<Result<RoleDto>> GetByNameAsync(string name, CancellationToken cancellationToken)
     {
         var role = await roleManager.FindByNameAsync(name);
 
         return role is null
-            ? Result<AppRole>.Fail(RoleErrors.NotFound)
-            : Result<AppRole>.Success(role);
+            ? Result<RoleDto>.Error(RoleErrors.NotFound)
+            : Result<RoleDto>.Success(role.Adapt<RoleDto>());
     }
 
     public async Task<Result> CreateAsync(AppRole role, CancellationToken cancellationToken)
@@ -83,8 +81,8 @@ public class RoleService(
         IdentityResult result = await roleManager.CreateAsync(role);
 
         return result.Succeeded
-            ? Result.Success()
-            : Result<AppRole>.Fail(result.GetErrors());
+            ? Result.Created()
+            : Result<AppRole>.Error(result.GetErrors());
     }
 
     public async Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken cancellationToken)
@@ -92,12 +90,12 @@ public class RoleService(
         var existingRole = await roleManager.FindByIdAsync(request.RoleId.ToString());
         if (existingRole is null)
         {
-            return Result<RoleDto>.Fail(RoleErrors.NotFound);
+            return Result<RoleDto>.Error(RoleErrors.NotFound);
         }
 
         if (existingRole.Name == RoleConstants.AdministratorRole)
         {
-            return Result.Fail(RoleErrors.NotAllowed);
+            return Result.Error(RoleErrors.NotAllowed);
         }
 
         existingRole.Name = request.Name;
@@ -107,7 +105,7 @@ public class RoleService(
 
         if (!result.Succeeded)
         {
-            return Result.Fail(result.GetErrors());
+            return Result.Error(result.GetErrors());
         }
 
         var currentClaims = await roleManager.GetClaimsAsync(existingRole);
@@ -118,7 +116,7 @@ public class RoleService(
             var removeResult = await roleManager.RemoveClaimAsync(existingRole, claim);
             if (!removeResult.Succeeded)
             {
-                return Result.Fail(removeResult.GetErrors());
+                return Result.Error(removeResult.GetErrors());
             }
         }
 
@@ -142,7 +140,7 @@ public class RoleService(
             }
         }
 
-        return await Result.SuccessAsync();
+        return Result.Success();
     }
 
     public async Task<Result> DeleteAsync(Guid roleId, CancellationToken cancellationToken)
@@ -150,28 +148,28 @@ public class RoleService(
         AppRole? existingRole = await roleManager.FindByIdAsync(roleId.ToString());
         if (existingRole is null)
         {
-            return await Result<AppRole>.FailAsync(RoleErrors.NotFound);
+            return Result<AppRole>.Error(RoleErrors.NotFound);
         }
         
         if (AppRoles.IsDefault(existingRole.Name!))
         {
-            return await Result<AppRole>.FailAsync(RoleErrors.NotAllowed);
+            return Result<AppRole>.Error(RoleErrors.NotAllowed);
         }
         
         if ((await userManager.GetUsersInRoleAsync(existingRole.Name!)).Any())
         {
-            return await Result<AppRole>.FailAsync(RoleErrors.NotAllowedBeingUsed);
+            return Result<AppRole>.Error(RoleErrors.NotAllowedBeingUsed);
         }
 
         var deleteResult = await roleManager.DeleteAsync(existingRole);
         return deleteResult.Succeeded
-            ? Result.Success()
-            : Result.Fail(deleteResult.GetErrors());
+            ? Result.NoContent()
+            : Result.Error(deleteResult.GetErrors());
     }
 
-    public async Task<Result<List<FSHPermission>>> GetAllPermissionsAsync(CancellationToken cancellationToken = default)
+    public Result<List<FSHPermission>> GetAllPermissions(CancellationToken cancellationToken = default)
     {
         var allPermissions = FSHPermissions.All.ToList();
-        return await Result<List<FSHPermission>>.SuccessAsync(allPermissions);
+        return Result<List<FSHPermission>>.Success(allPermissions);
     }
 }

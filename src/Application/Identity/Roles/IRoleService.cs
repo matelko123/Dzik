@@ -8,14 +8,14 @@ namespace Application.Identity.Roles;
 
 public interface IRoleService
 {
-    Task<Result<List<AppRole>>> GetListAsync(CancellationToken cancellationToken = default);
-    Task<Result<List<FSHPermission>>> GetAllPermissionsAsync(CancellationToken cancellationToken = default);
+    Task<Result<List<RoleDto>>> GetListAsync(CancellationToken cancellationToken = default);
+    Result<List<FSHPermission>> GetAllPermissions(CancellationToken cancellationToken = default);
 
     Task<int> GetCountAsync(CancellationToken cancellationToken = default);
 
-    Task<Result<AppRole>> GetByIdAsync(Guid roleId, CancellationToken cancellationToken = default);
+    Task<Result<RoleDto>> GetByIdAsync(Guid roleId, CancellationToken cancellationToken = default);
     Task<Result<RoleDto>> GetByIdWithPermissionsAsync(Guid roleId, CancellationToken cancellationToken = default);
-    Task<Result<AppRole>> GetByNameAsync(string name, CancellationToken cancellationToken = default);
+    Task<Result<RoleDto>> GetByNameAsync(string name, CancellationToken cancellationToken = default);
 
     Task<Result> CreateAsync(AppRole role, CancellationToken cancellationToken = default);
 
