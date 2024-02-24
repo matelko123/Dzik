@@ -23,8 +23,8 @@ public class UserEndpoints : IEndpoints
             {
                 Result<AppUser> result = await sender.Send(new GetUserByIdQuery(userId), cancellationToken);
                 return result
-                    ? Results.Ok(result.Data.Adapt<UserDto>())
-                    : Results.BadRequest(result.Messages);
+                    ? Results.Ok(result.Value.Adapt<UserDto>())
+                    : Results.BadRequest(result.Errors);
             })
             .WithName("Get cached user")
             .WithTags(Tag)

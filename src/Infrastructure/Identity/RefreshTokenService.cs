@@ -63,7 +63,7 @@ public class RefreshTokenService : IRefreshTokenService
         DateTime currentDate = _clock.Current();
         Result<AppRefreshToken?>? refreshToken = await GetRefreshTokenAsync(token, cancellationToken);
 
-        return refreshToken?.Data is not null && !refreshToken.Data.IsRevoked && refreshToken.Data.ExpiryDate > currentDate;
+        return refreshToken?.Value is not null && !refreshToken.Value.IsRevoked && refreshToken.Value.ExpiryDate > currentDate;
     }
 
     public async Task RevokeAllTokensForUser(Guid userId, CancellationToken cancellationToken = default)

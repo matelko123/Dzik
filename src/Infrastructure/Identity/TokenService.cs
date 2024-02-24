@@ -50,31 +50,31 @@ public class TokenService : ITokenService
         Result<string> refreshToken = await _refreshTokenService.GenerateRefreshTokenAsync(user.Id, cancellationToken);
         if (!refreshToken)
         {
-            return await Result<TokenResponse>.FailAsync(refreshToken);
+            return Result<TokenResponse>.Error(refreshToken);
         }
 
-        return new TokenResponse(token, refreshToken.Data!, expires);
+        return new TokenResponse(token, refreshToken.Value!, expires);
     }
 
     public async Task<Result<TokenResponse>> RefreshTokenAsync(string token, string refreshToken, CancellationToken cancellationToken = default)
     {
         Result<ClaimsPrincipal> userPrincipal = GetPrincipalFromExpiredToken(token);
-        if (!userPrincipal.Succeeded)
+        if (!userPrincipal.IsSuccess)
         {
-            return await Result<TokenResponse>.FailAsync(userPrincipal.Messages);
+            return Result<TokenResponse>.Error(userPrincipal.Errors.ToArray());
         }
 
-        string? userEmail = userPrincipal.Data?.GetEmail();
+        string? userEmail = userPrincipal.Value?.GetEmail();
 
         AppUser? user = await _userManager.FindByEmailAsync(userEmail!);
         if (user is null)
         {
-            return await Result<TokenResponse>.FailAsync("Authentication Failed.");
+            return Result<TokenResponse>.Error("Authentication Failed.");
         }
 
         if (!await _refreshTokenService.ValidateAsync(refreshToken, cancellationToken))
         {
-            return await Result<TokenResponse>.FailAsync("Invalid Refresh Token.");
+            return Result<TokenResponse>.Error("Invalid Refresh Token.");
         }
 
         return await CreateTokenAsync(user, cancellationToken);
@@ -114,7 +114,7 @@ public class TokenService : ITokenService
                 SecurityAlgorithms.HmacSha256,
                 StringComparison.InvariantCultureIgnoreCase))
         {
-            return Result<ClaimsPrincipal>.Fail("Invalid Token.");
+            return Result<ClaimsPrincipal>.Error("Invalid Token.");
         }
 
         return principal;

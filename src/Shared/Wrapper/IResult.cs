@@ -1,13 +1,18 @@
+using Contracts.Common;
+using System.Net;
+
 namespace Shared.Wrapper;
 
 public interface IResult
 {
-    List<string> Messages { get; set; }
-
-    bool Succeeded { get; set; }
+    HttpStatusCode Status { get; }
+    IEnumerable<string> Errors { get; }
+    bool IsSuccess { get; }
 }
 
-public interface IResult<out T> : IResult
+
+public interface IResult<T> : IResult
 {
-    T? Data { get; }
+    T? Value { get; }
+    Type ValueType { get; }
 }

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Application.Exceptions;
+using Contracts.Common;
 using Microsoft.AspNetCore.Authentication;
 
 namespace Host.Middleware;

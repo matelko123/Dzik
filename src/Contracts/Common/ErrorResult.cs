@@ -1,4 +1,6 @@
-namespace Host.Middleware;
+using System.Net;
+
+namespace Contracts.Common;
 
 public class ErrorResult
 {
@@ -7,3 +9,5 @@ public class ErrorResult
     public string? Message { get; set; }
     public IReadOnlyDictionary<string, string[]>? Errors { get; set; }
 }
+
+public sealed record Error(HttpStatusCode StatusCode, string Message);

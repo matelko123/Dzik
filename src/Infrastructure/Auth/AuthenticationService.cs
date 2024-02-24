@@ -35,7 +35,7 @@ public class AuthenticationService : SignInManager<AppUser>, IAuthenticationServ
             var result = await UserManager.CreateAsync(user, password);
             if (!result.Succeeded)
             {
-                return await Result<Guid>.FailAsync(result.GetErrors());
+                return Result<Guid>.Error(result.GetErrors());
             }
         
             // TODO: Send confirmation email if is set
@@ -49,7 +49,7 @@ public class AuthenticationService : SignInManager<AppUser>, IAuthenticationServ
         AppUser? user = await UserManager.FindByEmailAsync(email);
         if (user is null)
         {
-            return await Result<TokenResponse>.FailAsync(UserErrors.NotFound);
+            return Result<TokenResponse>.Error(UserErrors.NotFound);
         }
         
         // If user confirm Email if is required
@@ -58,17 +58,17 @@ public class AuthenticationService : SignInManager<AppUser>, IAuthenticationServ
         {
             if (isPasswordValid.IsLockedOut)
             {
-                return await Result<TokenResponse>.FailAsync(UserErrors.LockedOut);
+                return Result<TokenResponse>.Error(UserErrors.LockedOut);
             }
             
-            return await Result<TokenResponse>.FailAsync(UserErrors.NotAllowed);
+            return Result<TokenResponse>.Error(UserErrors.NotAllowed);
         }
         
         // Generate JWT & refresh
         Result<TokenResponse> token = await _tokenService.CreateTokenAsync(user, cancellationToken);
-        if (!token.Succeeded)
+        if (!token.IsSuccess)
         {
-            return await Result<TokenResponse>.FailAsync(token.Messages);
+            return token;
         }
         
         return token;

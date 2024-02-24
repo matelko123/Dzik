@@ -28,7 +28,7 @@ internal sealed class LoginCommandHandler : ICommandHandler<LoginCommand, Result
         if (result)
         {
             // Set JWT to httpContext
-            _tokenStorage.Set(result.Data!.Token);
+            _tokenStorage.Set(result.Value!.Token);
         }
         
         return result;

@@ -1,9 +1,9 @@
 ﻿using Application.Identity.Roles;
+using Contracts.Common;
 using Contracts.Identity.Roles;
 using Domain.Entities.Identity;
 using Host.Endpoints.Internal;
-using Host.Middleware;
-using Mapster;
+using Host.Extensions;
 using Shared.Wrapper;
 
 namespace Host.Endpoints.Identity;
@@ -23,7 +23,7 @@ public class RolesEndpoints : IEndpoints
             IRoleService roleService, CancellationToken cancellationToken) =>
         {
             var roles = await roleService.GetListAsync(cancellationToken);
-            return Results.Ok(roles.Data!.Adapt<List<RoleDto>>());
+            return roles.ToApiResult();
         })
             .WithName("GetAllRoles")
             .WithTags(Tag)
@@ -33,7 +33,7 @@ public class RolesEndpoints : IEndpoints
                 operation.Summary = "Return all roles";
                 return operation;
             })
-            .Produces<List<RoleDto>>(StatusCodes.Status200OK);
+            .Produces<Result<List<RoleDto>>>(StatusCodes.Status200OK);
 
 
         rolesGroup.MapGet("/{id:guid}", async (
@@ -41,12 +41,12 @@ public class RolesEndpoints : IEndpoints
             IRoleService roleService, CancellationToken cancellationToken) =>
         {
             var role = await roleService.GetByIdWithPermissionsAsync(id, cancellationToken);
-            return role.Match(Results.Ok, Results.NotFound);
+            return role.ToApiResult();
         })
             .WithName("GetRoleById")
             .WithTags(Tag)
             .Produces<Result<RoleDto>>(StatusCodes.Status200OK)
-            .Produces<ErrorResult>(StatusCodes.Status404NotFound);
+            .Produces<ErrorResult>(StatusCodes.Status500InternalServerError);
 
 
         rolesGroup.MapPost("/", async (
@@ -54,16 +54,14 @@ public class RolesEndpoints : IEndpoints
             IRoleService roleService, CancellationToken cancellationToken) =>
         {
             var role = new AppRole(request.Name, request.Description);
-            var roles = await roleService.CreateAsync(role, cancellationToken);
-            return roles.Match(
-                Results.Created,
-                Results.BadRequest);
+            var result = await roleService.CreateAsync(role, cancellationToken);
+            return result.ToApiResult();
         })
             .WithName("CreateRole")
             .WithTags(Tag)
             .Accepts<CreateRoleRequest>(ContentType)
             .Produces<Result>(StatusCodes.Status201Created)
-            .Produces<ErrorResult>(StatusCodes.Status400BadRequest);
+            .Produces<ErrorResult>(StatusCodes.Status500InternalServerError);
 
 
         rolesGroup.MapDelete("/{id:guid}", async (
@@ -71,14 +69,12 @@ public class RolesEndpoints : IEndpoints
             IRoleService roleService, CancellationToken cancellationToken) =>
         {
             var result = await roleService.DeleteAsync(id, cancellationToken);
-            return result.Match(
-                Results.NoContent,
-                Results.NotFound);
+            return result.ToApiResult();
         })
             .WithName("DeleteRole")
             .WithTags(Tag)
-            .Produces<Result>(StatusCodes.Status204NoContent)
-            .Produces<ErrorResult>(StatusCodes.Status400BadRequest);
+            .Produces<Result>(StatusCodes.Status200OK)
+            .Produces<ErrorResult>(StatusCodes.Status500InternalServerError);
 
 
         rolesGroup.MapPut("/{id:guid}", async (
@@ -86,13 +82,11 @@ public class RolesEndpoints : IEndpoints
             IRoleService roleService, CancellationToken cancellationToken) =>
         {
             var roles = await roleService.UpdateAsync(request with { RoleId = id }, cancellationToken);
-            return roles.Match(
-                Results.NoContent,
-                Results.NotFound);
+            return roles.ToApiResult();
         })
             .WithName("UpdateRole")
             .WithTags(Tag)
             .Produces<Result>(StatusCodes.Status200OK)
-            .Produces<ErrorResult>(StatusCodes.Status400BadRequest);
+            .Produces<ErrorResult>(StatusCodes.Status500InternalServerError);
     }
 }

@@ -25,7 +25,7 @@ internal sealed class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdQuery, 
     {
         AppUser? user = await _userManager.FindByIdAsync(request.UserId.ToString());
         return user is null 
-            ? await Result<AppUser>.FailAsync(UserErrors.NotFound) 
-            : await Result<AppUser>.SuccessAsync(user);
+            ? Result<AppUser>.Error(UserErrors.NotFound) 
+            : Result<AppUser>.Success(user);
     }
 }

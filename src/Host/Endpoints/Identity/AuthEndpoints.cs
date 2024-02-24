@@ -1,8 +1,8 @@
 using Application.Features.Identity.Authentication.Commands;
 using Application.Features.Identity.Tokens.Commands;
+using Contracts.Common;
 using Contracts.Identity.Authentication;
 using Host.Endpoints.Internal;
-using Host.Middleware;
 using Mapster;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
