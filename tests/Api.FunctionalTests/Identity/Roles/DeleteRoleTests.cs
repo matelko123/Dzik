@@ -56,7 +56,9 @@ public class DeleteRoleTests(FunctionalTestWebAppFactory factory) : BaseFunction
         var user = new AppUser();
         await DbContext.Roles.AddAsync(role);
         await DbContext.Users.AddAsync(user);
-        await DbContext.UserRoles.AddAsync(new Microsoft.AspNetCore.Identity.IdentityUserRole<Guid>() { UserId = user.Id, RoleId = role.Id });
+        var userRole = new Microsoft.AspNetCore.Identity.IdentityUserRole<Guid>()
+            { UserId = user.Id, RoleId = role.Id };
+        await DbContext.UserRoles.AddAsync(userRole);
         await DbContext.SaveChangesAsync();
 
         // Act

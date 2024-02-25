@@ -122,7 +122,7 @@ public class RoleService(
         var currentClaims = await roleManager.GetClaimsAsync(existingRole);
 
         // Remove permissions that were previously selected
-        foreach (var claim in currentClaims.Where(c => !request.Permissions.Any(p => p == c.Value)))
+        foreach (var claim in currentClaims.Where(c => !request.Permissions.Contains(c.Value)))
         {
             var removeResult = await roleManager.RemoveClaimAsync(existingRole, claim);
             if (!removeResult.Succeeded)
@@ -134,21 +134,22 @@ public class RoleService(
         // Add all permissions that were not previously selected
         var allPermissions = FSHPermissions.All;
         var permissionsToAdd = request.Permissions
-            .Where(c => !currentClaims.Any(p => p.Value == c))
+            .Where(c => !currentClaims.Select(x => x.Value).Contains(c))
             .Where(c => allPermissions.Select(x => x.Name).Contains(c));
 
         foreach (string permission in permissionsToAdd)
         {
-            if (!string.IsNullOrEmpty(permission))
+            var fshPermission = FSHPermissions.All.FirstOrDefault(x => x.Name == permission);
+            if(fshPermission is null) continue;
+
+            appDbContext.RoleClaims.Add(new AppRoleClaim
             {
-                appDbContext.RoleClaims.Add(new AppRoleClaim
-                {
-                    RoleId = existingRole.Id,
-                    ClaimType = ApplicationClaimTypes.Permission,
-                    ClaimValue = permission,
-                });
-                await appDbContext.SaveChangesAsync(cancellationToken);
-            }
+                RoleId = existingRole.Id,
+                ClaimType = ApplicationClaimTypes.Permission,
+                ClaimValue = permission,
+                Group = fshPermission.Resource
+            });
+            await appDbContext.SaveChangesAsync(cancellationToken);
         }
 
         return Result.Success();
