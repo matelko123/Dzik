@@ -5,21 +5,23 @@ namespace Shared.Wrapper;
 
 public class Result : IResult
 {
-    public HttpStatusCode Status { get; protected set; } = HttpStatusCode.BadRequest;
+    public HttpStatusCode Status { get; init; } = HttpStatusCode.BadRequest;
 
-    public IEnumerable<string> Errors { get; protected set; } = new List<string>();
+    public IEnumerable<string> Errors { get; init; } = new List<string>();
 
-    public bool IsSuccess { get; protected set; } = false;
+    public bool IsSuccess => (int)Status < 300;
 
-    public Result(HttpStatusCode status, bool isSuccess = false) 
+    public Result()
     {
-        Status = status;
-        IsSuccess = isSuccess;
     }
-    public Result(HttpStatusCode status, IEnumerable<string> errors)
+    protected internal Result(HttpStatusCode status) 
     {
         Status = status;
-        IsSuccess = false;
+    }
+
+    protected internal Result(HttpStatusCode status, IEnumerable<string> errors)
+    {
+        Status = status;
         Errors = errors;
     }
 
@@ -31,11 +33,11 @@ public class Result : IResult
             ? success()
             : fail(Errors);
 
-    public static Result Success() => new(HttpStatusCode.OK, true);
-    public static Result Created() => new(HttpStatusCode.Created, true);
-    public static Result NoContent() => new(HttpStatusCode.NoContent, true);
+    public static Result Success() => new(HttpStatusCode.OK);
+    public static Result Created() => new(HttpStatusCode.Created);
+    public static Result NoContent() => new(HttpStatusCode.NoContent);
     public static Result Error(Error error) => new(error.StatusCode, [error.Message]);
     public static Result Error(params string[] errorMessages) => new(HttpStatusCode.BadRequest, errorMessages);
-    public static Result NotFound() => new(HttpStatusCode.NotFound, false);
-    public static Result Unauthorized() => new(HttpStatusCode.Unauthorized, false);
+    public static Result NotFound() => new(HttpStatusCode.NotFound);
+    public static Result Unauthorized() => new(HttpStatusCode.Unauthorized);
 }

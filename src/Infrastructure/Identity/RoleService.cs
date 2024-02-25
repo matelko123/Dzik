@@ -12,6 +12,7 @@ using Shared.Authorization.Constants.Role;
 using Shared.Wrapper;
 using System.Data;
 using System.Security.Claims;
+using System.Xml.Linq;
 
 namespace Infrastructure.Identity;
 
@@ -78,6 +79,16 @@ public class RoleService(
 
     public async Task<Result> CreateAsync(AppRole role, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(role.Name))
+        {
+            return Result.Error(RoleErrors.Failed);
+        }
+
+        if (await roleManager.FindByNameAsync(role.Name) is { })
+        {
+            return Result.Error(RoleErrors.AlreadyExists);
+        }
+
         IdentityResult result = await roleManager.CreateAsync(role);
 
         return result.Succeeded
