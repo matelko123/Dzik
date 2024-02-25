@@ -1,3 +1,4 @@
+using Shared.Authorization.Constants.Role;
 using System.Collections.ObjectModel;
 
 namespace Shared.Authorization;
@@ -9,8 +10,8 @@ public static class AppRoles
     
     public static IEnumerable<string> DefaultRoles { get; } = new ReadOnlyCollection<string>(new[]
     {
-        Admin,
-        Basic
+        RoleConstants.AdministratorRole,
+        RoleConstants.BasicRole
     });
         
     public static bool IsDefault(string roleName) => DefaultRoles.Any(r => r == roleName);

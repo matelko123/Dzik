@@ -29,6 +29,7 @@ public static class ResultExtensions
                     ? Results.Ok(result)
                     : Results.Ok(Result<TR>.Success(func(result.Value))),
             HttpStatusCode.Created => Results.Created(),
+            HttpStatusCode.NoContent => Results.NoContent(),
             HttpStatusCode.NotFound => Results.NotFound(result),
             HttpStatusCode.Unauthorized => Results.Unauthorized(),
             HttpStatusCode.Forbidden => Results.Forbid(),
@@ -44,6 +45,7 @@ public static class ResultExtensions
         {
             HttpStatusCode.OK => Results.Ok(result),
             HttpStatusCode.Created => Results.Created(),
+            HttpStatusCode.NoContent => Results.NoContent(),
             HttpStatusCode.NotFound => Results.NotFound(result),
             HttpStatusCode.Unauthorized => Results.Unauthorized(),
             HttpStatusCode.Forbidden => Results.Forbid(),
