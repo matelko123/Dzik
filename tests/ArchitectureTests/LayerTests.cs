@@ -6,35 +6,38 @@ namespace ArchitectureTests;
 public class LayerTests : BaseTest
 {
     [Fact]
-    public void Domain_Should_NotHaveAnyDependency()
+    public void Domain_Should_NotHaveDependency()
     {
+        // Arrange
+        var otherProjects = new[]
+        {
+            ApplicationAssembly,
+            InfrastructureAssembly,
+            HostAssembly
+        }
+        .Select(x => x.GetName().Name)
+        .ToArray();
+
+        // Act
         var result = Types.InAssembly(DomainAssembly)
             .Should()
-            .NotHaveDependencyOnAny()
-            .GetResult();
+            .NotHaveDependencyOnAny(otherProjects)
+            .GetResult()
+            .IsSuccessful;
 
-        result.IsSuccessful.Should().BeTrue();
+        // Assert
+        result.Should().BeTrue();
     }
     
     [Fact]
-    public void Application_Should_DependOnDomain()
+    public void Application_Should_NotDependOnInfrastructure()
     {
         var result = Types.InAssembly(ApplicationAssembly)
             .Should()
-            .HaveDependencyOn("Domain")
-            .GetResult();
+            .NotHaveDependencyOn(InfrastructureAssembly.GetName().Name)
+            .GetResult()
+            .IsSuccessful;
 
-        result.IsSuccessful.Should().BeTrue();
-    }
-    
-    [Fact]
-    public void Infrastructure_Should_DependOnDomainAndApplication()
-    {
-        var result = Types.InAssembly(InfrastructureAssembly)
-            .Should()
-            .HaveDependencyOnAll("Domain", "Application")
-            .GetResult();
-
-        result.IsSuccessful.Should().BeTrue();
+        result.Should().BeTrue();
     }
 }
