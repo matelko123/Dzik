@@ -37,3 +37,5 @@ app.MapInfrastructureEndpoints();
 app.UseEndpoints<Program>();
 // app.MapIdentityApi<AppUser>();
 app.Run();
+
+public partial class Program;
