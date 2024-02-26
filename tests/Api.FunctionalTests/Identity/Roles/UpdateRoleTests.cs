@@ -56,11 +56,11 @@ public class UpdateRoleTests(
     public async Task Should_UpdateRoleWithoutPermissions_WhenValid()
     {
         // Arrange
-        var role = new AppRole("Test", "Test role");
+        var role = new AppRole(Guid.NewGuid().ToString(), "Test role");
         await DbContext.Roles.AddAsync(role);
         await DbContext.SaveChangesAsync();
 
-        var updatedRole = new UpdateRoleRequest(role.Id, "Test 1", "Test role 1", []);
+        var updatedRole = new UpdateRoleRequest(role.Id, Guid.NewGuid().ToString(), "Test role 1", []);
 
         // Act
         var response = await HttpClient.PutAsJsonAsync($"/roles/{role.Id}", updatedRole);
@@ -75,12 +75,12 @@ public class UpdateRoleTests(
     public async Task Should_UpdateRoleWithPermissions_WhenValid()
     {
         // Arrange
-        var role = new AppRole("Test", "Test role");
+        var role = new AppRole(Guid.NewGuid().ToString(), "Test role");
         await DbContext.Roles.AddAsync(role);
         await DbContext.SaveChangesAsync();
 
         var rolePermissions = FSHPermissions.Admin.Select(x => x.Name).ToList();
-        var updatedRole = new UpdateRoleRequest(role.Id, "Test 1", "Test role 1", rolePermissions);
+        var updatedRole = new UpdateRoleRequest(role.Id, Guid.NewGuid().ToString(), "Test role 1", rolePermissions);
 
         // Act
         var response = await HttpClient.PutAsJsonAsync($"/roles/{role.Id}", updatedRole);
