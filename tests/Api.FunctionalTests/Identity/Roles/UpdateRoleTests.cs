@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using Api.FunctionalTests.Abstractions;
 using Api.FunctionalTests.Extensions;
 using Application.Errors;
@@ -92,6 +93,45 @@ public class UpdateRoleTests(
             .Where(x => x.ClaimType == ApplicationClaimTypes.Permission)
             .Select(x => x.ClaimValue)
             .Should().BeEquivalentTo(rolePermissions);
+    }
+
+
+    [Fact]
+    public async Task Should_UpdateRoleWithPermissionsBasic_WhenValid()
+    {
+        // Arrange
+        var role = new AppRole(Guid.NewGuid().ToString(), "Test role");
+        await DbContext.Roles.AddAsync(role);
+        var basicRoleClaims = FSHPermissions.Basic.Select(x => new AppRoleClaim()
+        {
+            ClaimType = ApplicationClaimTypes.Permission,
+            ClaimValue = x.Name,
+            Group = x.Resource,
+            RoleId = role.Id
+        }).ToList();
+        await DbContext.RoleClaims.AddRangeAsync(basicRoleClaims);
+        await DbContext.SaveChangesAsync();
+
+        var adminRoleClaims = FSHPermissions.Admin.Select(x => new AppRoleClaim()
+        {
+            ClaimType = ApplicationClaimTypes.Permission,
+            ClaimValue = x.Name,
+            Group = x.Resource,
+            RoleId = role.Id
+        }).ToList();
+
+        var rolePermissions = FSHPermissions.Admin.Select(x => x.Name).ToList();
+        var updatedRole = new UpdateRoleRequest(role.Id, Guid.NewGuid().ToString(), "Test role 1", rolePermissions);
+
+        // Act
+        var response = await HttpClient.PutAsJsonAsync($"/roles/{role.Id}", updatedRole);
+        var existingRoleClaims = await DbContext.RoleClaims
+            .Where(x => x.RoleId == role.Id)
+            .ToListAsync();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        existingRoleClaims.Should().BeEquivalentTo(adminRoleClaims, options => options.Excluding(x => x.Id));
     }
 }
 
