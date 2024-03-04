@@ -27,60 +27,45 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
         var identityOptions = options.Value;
         
         RuleFor(u => u.FirstName)
-            .MinimumLength(UserErrors.Validation.FirstName.MinimumLength)
-                .WithMessage(UserErrors.Validation.FirstName.MinimumLengthMessage);
+            .NotEmpty();
         
         RuleFor(u => u.LastName)
-            .MinimumLength(UserErrors.Validation.LastName.MinimumLength)
-                .WithMessage(UserErrors.Validation.LastName.MinimumLengthMessage);
+            .NotEmpty();
         
         RuleFor(u => u.Email).Cascade(CascadeMode.Stop)
             .NotEmpty()
-                .WithMessage(UserErrors.Validation.Email.NotEmpty)
             .EmailAddress()
-                .WithMessage(UserErrors.Validation.Email.InvalidFormat)
             .MustAsync(async (email, _) => !await userService.ExistsWithEmailAsync(email))
-                .WithMessage((_, email) => UserErrors.Validation.Email.AlreadyTaken(email));
+                .WithMessage(UserErrors.Validation.EmailAlreadyTaken);
 
         RuleFor(u => u.UserName).Cascade(CascadeMode.Stop)
             .NotEmpty()
-                .WithMessage(UserErrors.Validation.Username.NotEmpty)
-            .MinimumLength(UserErrors.Validation.Username.MinimumLength)
-                .WithMessage(UserErrors.Validation.Username.MinimumLengthMessage)
+            .MinimumLength(6)
             .MustAsync(async (name, _) => !await userService.ExistsWithNameAsync(name))
-                .WithMessage((_, name) => UserErrors.Validation.Username.AlreadyTaken(name));
+                .WithMessage(UserErrors.Validation.UsernameAlreadyTaken);
 
 
         RuleFor(u => u.Password).Cascade(CascadeMode.Stop)
             .NotEmpty()
-                .WithMessage(UserErrors.Validation.Password.NotEmpty)
-            .MinimumLength(identityOptions.Password.RequiredLength)
-                .WithMessage((a, b) => UserErrors.Validation.Password.MinimumLengthMessage(identityOptions.Password.RequiredLength));
+            .MinimumLength(identityOptions.Password.RequiredLength);
         
         RuleFor(x => x.PhoneNumber).Cascade(CascadeMode.Stop)
             .NotEmpty()
-                .WithMessage(UserErrors.Validation.PhoneNumber.NotEmpty)
             .Matches(@"^\+?[1-9]\d{1,14}$")
-                .WithMessage(UserErrors.Validation.PhoneNumber.InvalidFormat)
+                .WithMessage(UserErrors.Validation.PhoneNumberInvalidFormat)
             .MustAsync(async (phone, _) => !await userService.ExistsWithPhoneNumberAsync(phone!))
-                .WithMessage((_, phone) => UserErrors.Validation.PhoneNumber.AlreadyTaken(phone));
+                .WithMessage(UserErrors.Validation.PhoneNumberAlreadyTaken);
     }
 }
 
-internal sealed class RegisterCommandHandler
+internal sealed class RegisterCommandHandler(
+    IAuthenticationService authenticationService)
     : ICommandHandler<RegisterCommand, Result<Guid>>
 {
-    private readonly IAuthenticationService _authenticationService;
-
-    public RegisterCommandHandler(IAuthenticationService authenticationService)
-    {
-        _authenticationService = authenticationService;
-    }
-
     public async Task<Result<Guid>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         AppUser user = request.Adapt<AppUser>();
-        Result<Guid> result = await _authenticationService.RegisterUserAsync(user, request.Password, cancellationToken);
+        Result<Guid> result = await authenticationService.RegisterUserAsync(user, request.Password, cancellationToken);
         return result;
     }
 }
