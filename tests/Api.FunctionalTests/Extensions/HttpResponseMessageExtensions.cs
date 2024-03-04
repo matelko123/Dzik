@@ -11,25 +11,20 @@ internal static class HttpResponseMessageExtensions
         PropertyNameCaseInsensitive = true 
     };
 
-    internal static async Task<Result<T?>> GetResult<T>(this HttpResponseMessage message)
+    internal static async Task<T> GetResponse<T>(this HttpResponseMessage message)
     {
         var stream = await message.Content.ReadAsStreamAsync();
 
-        Result<T?>? result = await JsonSerializer.DeserializeAsync<Result<T?>>(stream, options);
+        T? result = await JsonSerializer.DeserializeAsync<T>(stream, options);
 
         result.Should().NotBeNull();
 
         return result!;
     }
+
+    internal static async Task<Result<T?>> GetResult<T>(this HttpResponseMessage message)
+        => await message.GetResponse<Result<T?>>();
 
     internal static async Task<Result> GetResult(this HttpResponseMessage message)
-    {
-        var stream = await message.Content.ReadAsStreamAsync();
-
-        Result? result = await JsonSerializer.DeserializeAsync<Result>(stream, options);
-
-        result.Should().NotBeNull();
-
-        return result!;
-    }
+        => await message.GetResponse<Result>();
 }

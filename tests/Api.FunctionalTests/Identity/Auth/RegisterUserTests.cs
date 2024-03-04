@@ -35,12 +35,8 @@ public class RegisterUserTests(
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
-        ErrorResult? result = await response.Content.ReadFromJsonAsync<ErrorResult>();
-        result.Should().NotBeNull();
-        result.Errors.Should().BeEquivalentTo(expectingErrors);
-        result.StatusCode.Should().Be((int)HttpStatusCode.UnprocessableEntity);
-        result.Exception.Should().Be("FluentValidation.ValidationException");
-        result.Message.Should().Be("One or more validation errors occurs");
+        ErrorResult result = await response.GetResponse<ErrorResult>();
+        result.Should().BeEquivalentTo(ResultsExtensions.ValidationErrorResult(expectingErrors));
     }
 
     [Fact]
@@ -63,12 +59,8 @@ public class RegisterUserTests(
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
-        ErrorResult? result = await response.Content.ReadFromJsonAsync<ErrorResult>();
-        result.Should().NotBeNull();
-        result.Errors.Should().BeEquivalentTo(expectingErrors);
-        result.StatusCode.Should().Be((int)HttpStatusCode.UnprocessableEntity);
-        result.Exception.Should().Be("FluentValidation.ValidationException");
-        result.Message.Should().Be("One or more validation errors occurs");
+        ErrorResult result = await response.GetResponse<ErrorResult>();
+        result.Should().BeEquivalentTo(ResultsExtensions.ValidationErrorResult(expectingErrors));
     }
 
 
@@ -92,12 +84,8 @@ public class RegisterUserTests(
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
-        ErrorResult? result = await response.Content.ReadFromJsonAsync<ErrorResult>();
-        result.Should().NotBeNull();
-        result.Errors.Should().BeEquivalentTo(expectingErrors);
-        result.StatusCode.Should().Be((int)HttpStatusCode.UnprocessableEntity);
-        result.Exception.Should().Be("FluentValidation.ValidationException");
-        result.Message.Should().Be("One or more validation errors occurs");
+        ErrorResult result = await response.GetResponse<ErrorResult>();
+        result.Should().BeEquivalentTo(ResultsExtensions.ValidationErrorResult(expectingErrors));
     }
 
 
@@ -121,12 +109,8 @@ public class RegisterUserTests(
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
-        ErrorResult? result = await response.Content.ReadFromJsonAsync<ErrorResult>();
-        result.Should().NotBeNull();
-        result.Errors.Should().BeEquivalentTo(expectingErrors);
-        result.StatusCode.Should().Be((int)HttpStatusCode.UnprocessableEntity);
-        result.Exception.Should().Be("FluentValidation.ValidationException");
-        result.Message.Should().Be("One or more validation errors occurs");
+        ErrorResult result = await response.GetResponse<ErrorResult>();
+        result.Should().BeEquivalentTo(ResultsExtensions.ValidationErrorResult(expectingErrors));
     }
 
     [Fact]
