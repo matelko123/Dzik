@@ -1,9 +1,7 @@
 using Application.Features.Identity.Authentication.Commands;
-using Application.Features.Identity.Tokens.Commands;
-using Contracts.Common;
 using Contracts.Identity.Authentication;
 using Host.Endpoints.Internal;
-using Mapster;
+using Host.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Authorization;
@@ -14,64 +12,41 @@ namespace Host.Endpoints.Identity;
 
 public class AuthEndpoints : IEndpoints
 {
-    private const string ContentType = "application/json";
-    private const string Tag = "Auth";
-    private const string BaseRoute = "auth";
-
     public static void DefineEndpoints(IEndpointRouteBuilder app)
     {
-        var authGroup = app.MapGroup(BaseRoute);
+        RouteGroupBuilder authGroup = app
+            .MapGroup("api/auth")
+            .WithTags("Authorization");
 
         authGroup.MapPost("/register", async (
                 [FromBody] RegisterRequest request,
                 ISender sender, CancellationToken cancellationToken) =>
             {
-                RegisterCommand command = request.Adapt<RegisterCommand>();
-                Result<Guid> client = await sender.Send(command, cancellationToken);
-                return client.Match(
-                    Results.Ok,
-                    Results.BadRequest);
+                RegisterCommand command = new(request.FirstName, request.LastName, request.UserName, request.Email,
+                    request.Password, request.PhoneNumber);
+                Result<Guid> result = await sender.Send(command, cancellationToken);
+                return result
+                    ? Results.CreatedAtRoute("GetCachedUser", new { userId = result.Value }, result)
+                    : result.ToApiResult();
             })
             .WithName("Register")
-            .WithTags(Tag)
-            .Accepts<RegisterRequest>(ContentType)
-            .Produces<Guid>(StatusCodes.Status201Created)
-            .Produces<ErrorResult>(StatusCodes.Status422UnprocessableEntity);
+            .Accepts<RegisterRequest>(EndpointConstants.ContentType)
+            .Produces<Result<Guid>>(StatusCodes.Status201Created);
 
 
-        authGroup.MapPost("/login", async (
+        authGroup.MapPost("/signin", async (
                 [FromBody] LoginRequest request,
                 ISender sender, CancellationToken cancellationToken) =>
             {
-                LoginCommand command = request.Adapt<LoginCommand>();
-                Result<TokenResponse> client = await sender.Send(command, cancellationToken);
-                return client.Match(
-                    Results.Ok,
-                    Results.BadRequest);
+                LoginCommand command = new(request.Email, request.Password, request.IsPersistent, request.TwoFactorCode, request.TwoFactorRecoveryCode);
+                Result<TokenResponse> result = await sender.Send(command, cancellationToken);
+                return result.ToApiResult();
             })
             .WithName("Login")
-            .WithTags(Tag)
-            .Accepts<LoginRequest>(ContentType)
-            .Produces<TokenResponse>();
+            .Accepts<LoginRequest>(EndpointConstants.ContentType)
+            .Produces<Result<TokenResponse>>();
 
-
-        authGroup.MapPost("/refresh", async (
-                [FromBody] RefreshTokenCommand request,
-                ISender sender, CancellationToken cancellationToken) =>
-            {
-                Result<TokenResponse> result = await sender.Send(request, cancellationToken);
-                return result.Match(
-                    Results.Ok,
-                    Results.BadRequest);
-            })
-            .WithName("Refresh token")
-            .WithTags(Tag)
-            .Accepts<LoginCommand>(ContentType)
-            .Produces<TokenResponse>()
-            .RequireAuthorization();
-
-
-        authGroup.MapPost("/info", (
+        authGroup.MapPost("/me", (
                 ClaimsPrincipal claims) =>
             {
                 var result = new
@@ -86,8 +61,7 @@ public class AuthEndpoints : IEndpoints
 
                 return Results.Ok(result);
             })
-            .WithName("Info")
-            .WithTags(Tag)
+            .WithName("Me")
             .RequireAuthorization();
     }
 }

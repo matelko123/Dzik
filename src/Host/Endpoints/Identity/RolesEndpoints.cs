@@ -10,14 +10,11 @@ namespace Host.Endpoints.Identity;
 
 public class RolesEndpoints : IEndpoints
 {
-    private const string ContentType = "application/json";
-    private const string Tag = "Roles";
-    private const string BaseRoute = "roles";
-
-
     public static void DefineEndpoints(IEndpointRouteBuilder app)
     {
-        var rolesGroup = app.MapGroup(BaseRoute);
+        var rolesGroup = app
+            .MapGroup("roles")
+            .WithTags("Roles");
 
         rolesGroup.MapGet("/", async (
             IRoleService roleService, CancellationToken cancellationToken) =>
@@ -26,14 +23,13 @@ public class RolesEndpoints : IEndpoints
             return roles.ToApiResult();
         })
             .WithName("GetAllRoles")
-            .WithTags(Tag)
             .WithOpenApi(operation =>
             {
                 operation.Description = "test";
                 operation.Summary = "Return all roles";
                 return operation;
             })
-            .Produces<Result<List<RoleDto>>>(StatusCodes.Status200OK);
+            .Produces<Result<List<RoleDto>>>();
 
 
         rolesGroup.MapGet("/{id:guid}", async (
@@ -44,8 +40,7 @@ public class RolesEndpoints : IEndpoints
             return role.ToApiResult();
         })
             .WithName("GetRoleById")
-            .WithTags(Tag)
-            .Produces<Result<RoleDto>>(StatusCodes.Status200OK)
+            .Produces<Result<RoleDto>>()
             .Produces<ErrorResult>(StatusCodes.Status500InternalServerError);
 
 
@@ -58,8 +53,7 @@ public class RolesEndpoints : IEndpoints
             return result.ToApiResult();
         })
             .WithName("CreateRole")
-            .WithTags(Tag)
-            .Accepts<CreateRoleRequest>(ContentType)
+            .Accepts<CreateRoleRequest>(EndpointConstants.ContentType)
             .Produces<Result>(StatusCodes.Status201Created)
             .Produces<ErrorResult>(StatusCodes.Status500InternalServerError);
 
@@ -72,8 +66,7 @@ public class RolesEndpoints : IEndpoints
             return result.ToApiResult();
         })
             .WithName("DeleteRole")
-            .WithTags(Tag)
-            .Produces<Result>(StatusCodes.Status200OK)
+            .Produces<Result>()
             .Produces<ErrorResult>(StatusCodes.Status500InternalServerError);
 
 
@@ -85,8 +78,7 @@ public class RolesEndpoints : IEndpoints
             return roles.ToApiResult();
         })
             .WithName("UpdateRole")
-            .WithTags(Tag)
-            .Produces<Result>(StatusCodes.Status200OK)
+            .Produces<Result>()
             .Produces<ErrorResult>(StatusCodes.Status500InternalServerError);
     }
 }

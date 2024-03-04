@@ -16,6 +16,7 @@ internal static class Startup
             .ValidateOnStart();
 
         services
+            .AddHttpContextAccessor()
             .AddTransient<IAuthenticationService, AuthenticationService>()
             .AddSingleton<ITokenStorage, HttpContextTokenStorage>()
             .AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
