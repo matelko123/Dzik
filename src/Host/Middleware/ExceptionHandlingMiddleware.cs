@@ -1,20 +1,14 @@
 using System.Text.Json;
-using Application.Exceptions;
 using Contracts.Common;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 
 namespace Host.Middleware;
 
-public class ExceptionHandlingMiddleware : IMiddleware
+public class ExceptionHandlingMiddleware(
+    ILogger<ExceptionHandlingMiddleware> logger
+    ) : IMiddleware
 {
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
-
-    public ExceptionHandlingMiddleware(
-        ILogger<ExceptionHandlingMiddleware> logger)
-    {
-        _logger = logger;
-    }
-
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         try
@@ -23,7 +17,7 @@ public class ExceptionHandlingMiddleware : IMiddleware
         }
         catch (Exception e)
         {
-            _logger.LogError(e, e.Message);
+            logger.LogError(e, e.Message);
             await HandleExceptionAsync(context, e);
         }
     }
@@ -35,7 +29,7 @@ public class ExceptionHandlingMiddleware : IMiddleware
         {
             Exception = exception.GetType().FullName!,
             StatusCode = statusCode,
-            Message = exception.Message,
+            Message = GetMessage(exception),
             Errors = GetErrors(exception)
         };
         httpContext.Response.ContentType = "application/json";
@@ -49,6 +43,13 @@ public class ExceptionHandlingMiddleware : IMiddleware
             ValidationException => StatusCodes.Status422UnprocessableEntity,
             AuthenticationFailureException => StatusCodes.Status401Unauthorized,
             _ => StatusCodes.Status500InternalServerError
+        };
+
+    private static string GetMessage(Exception exception) =>
+        exception switch
+        {
+            ValidationException => "One or more validation errors occurs",
+            _ => exception.Message
         };
 
     private static IReadOnlyDictionary<string, string[]>? GetErrors(Exception exception)
