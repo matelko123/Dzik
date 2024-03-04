@@ -1,4 +1,3 @@
-using Application.Common.Interfaces;
 using Contracts.Identity.Authentication;
 using Domain.Entities.Identity;
 using Shared.Wrapper;
