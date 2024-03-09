@@ -8,8 +8,8 @@ public class Result<T> : Result, IResult<T>
 {
     public T? Value { get; }
 
-    public Result(T? value) 
-        : base (HttpStatusCode.OK)
+    public Result(T? value, HttpStatusCode code = HttpStatusCode.OK) 
+        : base (code)
     {
         Value = value;
     }
@@ -38,7 +38,7 @@ public class Result<T> : Result, IResult<T>
 
     public new static Result<T> Success() => new(HttpStatusCode.OK);
     public static Result<T> Success(T? value) => new(value);
-    public new static Result<T> Created() => new(HttpStatusCode.Created);
+    public static Result<T> Created(T? value) => new(value, HttpStatusCode.Created);
     public new static Result<T> NoContent() => new(HttpStatusCode.NoContent);
     public new static Result<T> Error(Error error) => new(error.StatusCode, [error.Message]);
     public new static Result<T> Error(params string[] errorMessages) => new(HttpStatusCode.BadRequest, errorMessages);
