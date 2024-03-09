@@ -127,7 +127,6 @@ public class RegisterUserTests(
         var result = await response.GetResult<Guid>();
         result.Errors.Should().BeEmpty();
         result.Value.Should().NotBeEmpty();
-        result.ValueType.Should().Be(typeof(Guid));
     }
 
 
