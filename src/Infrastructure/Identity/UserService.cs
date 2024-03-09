@@ -20,7 +20,7 @@ public class UserService : IUserService
         => await _userManager.FindByNameAsync(name) is not null;
 
     public async Task<bool> ExistsWithEmailAsync(string email, Guid? exceptId = null)
-        => await _userManager.FindByEmailAsync(email.Normalize()) is { } user && user.Id != exceptId;
+        => await _userManager.FindByEmailAsync(email) is { } user && user.Id != exceptId;
 
     public async Task<bool> ExistsWithPhoneNumberAsync(string phoneNumber, Guid? exceptId = null)
         => await _userManager.Users.FirstOrDefaultAsync(x => x.PhoneNumber == phoneNumber) is { } user && user.Id != exceptId;
