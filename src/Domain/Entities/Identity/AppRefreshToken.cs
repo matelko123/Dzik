@@ -6,7 +6,7 @@ namespace Domain.Entities.Identity;
 public sealed class AppRefreshToken
 {
     [Key]
-    public string Token { get; set; }
+    public string Token { get; set; } = default!;
     public Guid UserId { get; set; }
 
     public DateTime ExpiryDate { get; set; }
