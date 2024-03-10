@@ -17,6 +17,17 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("MyAllowSpecificOrigins", policy =>
+    {
+        policy
+            .WithOrigins("*")
+            .WithMethods("*")
+            .WithHeaders("*");
+    });
+});
+
 
 var app = builder.Build();
 
@@ -36,6 +47,7 @@ app.UseInfrastructure();
 app.MapInfrastructureEndpoints();
 app.UseEndpoints<Program>();
 // app.MapIdentityApi<AppUser>();
+app.UseCors("MyAllowSpecificOrigins");
 app.Run();
 
 public partial class Program;
