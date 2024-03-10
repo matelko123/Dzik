@@ -13,7 +13,7 @@ public class RolesEndpoints : IEndpoints
     public static void DefineEndpoints(IEndpointRouteBuilder app)
     {
         var rolesGroup = app
-            .MapGroup("roles")
+            .MapGroup("api/roles")
             .WithTags("Roles");
 
         rolesGroup.MapGet("/", async (
