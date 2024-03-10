@@ -1,0 +1,65 @@
+﻿@page "/identity/role/{roleId:guid}"
+@inject IRoleManager RoleManager
+
+
+@if (role is null)
+{
+    <p>Loading..</p>
+}
+else
+{
+    <h3>Role <b>@role.Name</b></h3>
+
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="details-tab" data-toggle="tab" href="#details" role="tab" aria-controls="details" aria-selected="true">Details</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="users-tab" data-toggle="tab" href="#users" role="tab" aria-controls="users" aria-selected="false">Users</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="permissions-tab" data-toggle="tab" href="#permissions" role="tab" aria-controls="permissions" aria-selected="false">Permissions</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
+            <EditForm Model="@role" OnValidSubmit="SaveAsync">
+
+            </EditForm>
+        </div>
+        <div class="tab-pane fade" id="users" role="tabpanel" aria-labelledby="users-tab">...</div>
+        <div class="tab-pane fade" id="permissions" role="tabpanel" aria-labelledby="permissions-tab">...</div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid roleId { get; set; }
+
+    RoleDto? role;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await RoleManager.GetRoleById(roleId);
+        if (response.IsSuccess)
+        {
+            role = response.Value!;
+        }
+        else
+        {
+            Console.WriteLine(string.Join("; ", response.Errors));
+        }
+    }
+    private async Task SaveAsync()
+    {
+        var response = await RoleManager.UpdateRole(roleId, role);
+        if (response.Succeeded)
+        {
+            
+        }
+        else
+        {
+           
+        }
+    }
+}
