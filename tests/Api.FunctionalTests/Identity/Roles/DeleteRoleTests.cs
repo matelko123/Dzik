@@ -11,6 +11,8 @@ namespace Api.FunctionalTests.Identity.Roles;
 
 public class DeleteRoleTests(FunctionalTestWebAppFactory factory) : BaseFunctionalTest(factory)
 {
+    private const string BASE_ROUTE = "api/roles";
+
     [Theory]
     [InlineData(RoleConstants.BasicRole)]
     [InlineData(RoleConstants.AdministratorRole)]
@@ -20,7 +22,7 @@ public class DeleteRoleTests(FunctionalTestWebAppFactory factory) : BaseFunction
         var adminRole = await DbContext.Roles.SingleOrDefaultAsync(x => x.Name == roleName);
 
         // Act
-        var response = await HttpClient.DeleteAsync($"roles/{adminRole!.Id}");
+        var response = await HttpClient.DeleteAsync($"{BASE_ROUTE}/{adminRole!.Id}");
         var isStillInDb = await DbContext.Roles.AnyAsync(x => x.Name == roleName);
 
         // Assert
@@ -39,7 +41,7 @@ public class DeleteRoleTests(FunctionalTestWebAppFactory factory) : BaseFunction
         Guid roleId = Guid.NewGuid();
 
         // Act
-        var response = await HttpClient.DeleteAsync($"roles/{roleId}");
+        var response = await HttpClient.DeleteAsync($"{BASE_ROUTE}/{roleId}");
 
         // Assert
         response.StatusCode.Should().Be(RoleErrors.NotFound.StatusCode);
@@ -62,7 +64,7 @@ public class DeleteRoleTests(FunctionalTestWebAppFactory factory) : BaseFunction
         await DbContext.SaveChangesAsync();
 
         // Act
-        var response = await HttpClient.DeleteAsync($"roles/{role.Id}");
+        var response = await HttpClient.DeleteAsync($"{BASE_ROUTE}/{role.Id}");
 
         // Assert
         response.StatusCode.Should().Be(RoleErrors.NotAllowedBeingUsed.StatusCode);
@@ -81,7 +83,7 @@ public class DeleteRoleTests(FunctionalTestWebAppFactory factory) : BaseFunction
         await DbContext.SaveChangesAsync();
 
         // Act
-        var response = await HttpClient.DeleteAsync($"roles/{role.Id}");
+        var response = await HttpClient.DeleteAsync($"{BASE_ROUTE}/{role.Id}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);

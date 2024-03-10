@@ -13,13 +13,15 @@ public class GetRoleTests(
     FunctionalTestWebAppFactory factory) 
     : BaseFunctionalTest(factory)
 {
+    private const string BASE_ROUTE = "api/roles";
+
     [Fact]
     public async Task Should_ReturnAllRoles_WhenExists()
     {
         // Arrange
 
         // Act
-        var response = await HttpClient.GetAsync("roles");
+        var response = await HttpClient.GetAsync(BASE_ROUTE);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -36,7 +38,7 @@ public class GetRoleTests(
         Guid requestRoleId = Guid.NewGuid();
 
         // Act
-        var response = await HttpClient.GetAsync($"roles/{requestRoleId}");
+        var response = await HttpClient.GetAsync($"{BASE_ROUTE}/{requestRoleId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -55,7 +57,7 @@ public class GetRoleTests(
         var role = await DbContext.Roles.SingleAsync(x => x.Name == roleName)!;
 
         // Act
-        var response = await HttpClient.GetAsync($"roles/{role.Id}");
+        var response = await HttpClient.GetAsync($"{BASE_ROUTE}/{role.Id}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);

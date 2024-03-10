@@ -6,12 +6,18 @@ namespace Shared.Wrapper;
 
 public class Result<T> : Result, IResult<T>
 {
-    public T? Value { get; }
+    public T? Value { get; init; }
 
     public Result(T? value, HttpStatusCode code = HttpStatusCode.OK) 
         : base (code)
     {
         Value = value;
+    }
+
+
+    [JsonConstructor]
+    public Result()
+    {
     }
 
     protected Result(HttpStatusCode status)

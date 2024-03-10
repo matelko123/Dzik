@@ -17,6 +17,8 @@ public class UpdateRoleTests(
     FunctionalTestWebAppFactory factory)
     : BaseFunctionalTest(factory)
 {
+    private const string BASE_ROUTE = "api/roles";
+
     [Fact]
     public async Task Should_ReturnNotFound_WhenRoleNotExists()
     {
@@ -26,7 +28,7 @@ public class UpdateRoleTests(
         var updatedRole = new AppRole("Test 1", "Test role 1");
 
         // Act
-        var response = await HttpClient.PutAsJsonAsync($"/roles/{roleId}", updatedRole);
+        var response = await HttpClient.PutAsJsonAsync($"{BASE_ROUTE}/{roleId}", updatedRole);
 
         // Assert
         response.StatusCode.Should().Be(RoleErrors.NotFound.StatusCode);
@@ -44,7 +46,7 @@ public class UpdateRoleTests(
         var updatedRole = new AppRole("Test 1", "Test role 1");
 
         // Act
-        var response = await HttpClient.PutAsJsonAsync($"/roles/{roleAdmin.Id}", updatedRole);
+        var response = await HttpClient.PutAsJsonAsync($"{BASE_ROUTE}/{roleAdmin.Id}", updatedRole);
 
         // Assert
         response.StatusCode.Should().Be(RoleErrors.NotAllowed.StatusCode);
@@ -64,7 +66,7 @@ public class UpdateRoleTests(
         var updatedRole = new UpdateRoleRequest(role.Id, Guid.NewGuid().ToString(), "Test role 1", []);
 
         // Act
-        var response = await HttpClient.PutAsJsonAsync($"/roles/{role.Id}", updatedRole);
+        var response = await HttpClient.PutAsJsonAsync($"{BASE_ROUTE}/{role.Id}", updatedRole);
         var roleClaims = await DbContext.RoleClaims.Where(x => x.RoleId == role.Id).ToListAsync();
 
         // Assert
@@ -84,7 +86,7 @@ public class UpdateRoleTests(
         var updatedRole = new UpdateRoleRequest(role.Id, Guid.NewGuid().ToString(), "Test role 1", rolePermissions);
 
         // Act
-        var response = await HttpClient.PutAsJsonAsync($"/roles/{role.Id}", updatedRole);
+        var response = await HttpClient.PutAsJsonAsync($"{BASE_ROUTE}/{role.Id}", updatedRole);
         var roleClaims = await DbContext.RoleClaims.Where(x => x.RoleId == role.Id).ToListAsync();
 
         // Assert
@@ -124,7 +126,7 @@ public class UpdateRoleTests(
         var updatedRole = new UpdateRoleRequest(role.Id, Guid.NewGuid().ToString(), "Test role 1", rolePermissions);
 
         // Act
-        var response = await HttpClient.PutAsJsonAsync($"/roles/{role.Id}", updatedRole);
+        var response = await HttpClient.PutAsJsonAsync($"{BASE_ROUTE}/{role.Id}", updatedRole);
         var existingRoleClaims = await DbContext.RoleClaims
             .Where(x => x.RoleId == role.Id)
             .ToListAsync();

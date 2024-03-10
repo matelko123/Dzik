@@ -13,6 +13,8 @@ public class CreateRoleTests(
     FunctionalTestWebAppFactory factory) 
     : BaseFunctionalTest(factory)
 {
+    private const string BASE_ROUTE = "api/roles";
+
     [Fact]
     public async Task Should_ReturnBadRequest_WhenRoleExists()
     {
@@ -20,7 +22,7 @@ public class CreateRoleTests(
         var request = new CreateRoleRequest(RoleConstants.AdministratorRole, "test description");
 
         // Act
-        var response = await HttpClient.PostAsJsonAsync("roles", request);
+        var response = await HttpClient.PostAsJsonAsync(BASE_ROUTE, request);
 
         // Assert
         response.StatusCode.Should().Be(RoleErrors.AlreadyExists.StatusCode);
@@ -36,7 +38,7 @@ public class CreateRoleTests(
         var request = new CreateRoleRequest("Viewer", "test description");
 
         // Act
-        var response = await HttpClient.PostAsJsonAsync("roles", request);
+        var response = await HttpClient.PostAsJsonAsync(BASE_ROUTE, request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
