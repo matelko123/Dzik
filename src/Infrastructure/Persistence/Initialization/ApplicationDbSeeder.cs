@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared.Authorization.Constants.Permission;
 using Shared.Authorization.Constants.Role;
+using Shared.Authorization.Constants.Users;
 
 namespace Infrastructure.Persistence.Initialization;
 
@@ -78,8 +79,34 @@ internal sealed class ApplicationDbSeeder
         }
     }
 
-    private Task SeedAdminUserAsync()
+    private async Task SeedAdminUserAsync()
     {
-        return Task.CompletedTask;
+        if (await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == UserConstants.Admin.Username)
+            is not AppUser adminUser)
+        {
+            adminUser = new AppUser
+            {
+                FirstName = UserConstants.Admin.FirstName.Trim().ToLowerInvariant(),
+                LastName = UserConstants.Admin.LastName.Trim().ToLowerInvariant(),
+                Email = UserConstants.Admin.Email,
+                UserName = UserConstants.Admin.Username,
+                EmailConfirmed = true,
+                PhoneNumberConfirmed = true,
+                NormalizedEmail = UserConstants.Admin.Email.ToUpperInvariant(),
+                NormalizedUserName = UserConstants.Admin.Username.ToUpperInvariant(),
+            };
+
+            _logger.LogInformation("Seeding Default Admin User");
+            var password = new PasswordHasher<AppUser>();
+            adminUser.PasswordHash = password.HashPassword(adminUser, UserConstants.Admin.Password);
+            await _userManager.CreateAsync(adminUser);
+        }
+
+        // Assign role to user
+        if (!await _userManager.IsInRoleAsync(adminUser, RoleConstants.AdministratorRole))
+        {
+            _logger.LogInformation("Assigning Admin Role to Admin User");
+            await _userManager.AddToRoleAsync(adminUser, RoleConstants.AdministratorRole);
+        }
     }
 }
