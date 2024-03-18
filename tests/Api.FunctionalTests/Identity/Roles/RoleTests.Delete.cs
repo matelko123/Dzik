@@ -1,6 +1,4 @@
-﻿using Api.FunctionalTests.Abstractions;
-using Api.FunctionalTests.Extensions;
-using Application.Errors;
+﻿using Application.Errors;
 using Domain.Entities.Identity;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -9,14 +7,12 @@ using System.Net;
 
 namespace Api.FunctionalTests.Identity.Roles;
 
-public class DeleteRoleTests(FunctionalTestWebAppFactory factory) : BaseFunctionalTest(factory)
+public partial class RoleTests
 {
-    private const string BASE_ROUTE = "api/roles";
-
     [Theory]
     [InlineData(RoleConstants.BasicRole)]
     [InlineData(RoleConstants.AdministratorRole)]
-    public async Task Should_ReturnBadRequest_WhenRoleDefault(string roleName)
+    public async Task Delete_Should_ReturnBadRequest_WhenRoleDefault(string roleName)
     {
         // Arrange
         var adminRole = await DbContext.Roles.SingleOrDefaultAsync(x => x.Name == roleName);
@@ -35,7 +31,7 @@ public class DeleteRoleTests(FunctionalTestWebAppFactory factory) : BaseFunction
     }
 
     [Fact]
-    public async Task Should_ReturnNotFound_WhenRoleNotExists()
+    public async Task Delete_Should_ReturnNotFound_WhenRoleNotExists()
     {
         // Arrange
         Guid roleId = Guid.NewGuid();
@@ -51,10 +47,10 @@ public class DeleteRoleTests(FunctionalTestWebAppFactory factory) : BaseFunction
     }
 
     [Fact]
-    public async Task Should_ReturnBadRequest_WhenRoleIsBeingUsed()
+    public async Task Delete_Should_ReturnBadRequest_WhenRoleIsBeingUsed()
     {
         // Arrange
-        var role = new AppRole("Test", "Testing role");
+        var role = new AppRole(RandomString(8), "Testing role");
         var user = new AppUser();
         await DbContext.Roles.AddAsync(role);
         await DbContext.Users.AddAsync(user);
@@ -73,12 +69,11 @@ public class DeleteRoleTests(FunctionalTestWebAppFactory factory) : BaseFunction
         result.Errors.Should().BeEquivalentTo(RoleErrors.NotAllowedBeingUsed.Message);
     }
 
-
     [Fact]
-    public async Task Should_ReturnSuccess_WhenRoleValid()
+    public async Task Delete_Should_ReturnSuccess_WhenRoleValid()
     {
         // Arrange
-        var role = new AppRole("Test", "Testing role");
+        var role = new AppRole(RandomString(8), "Testing role");
         await DbContext.Roles.AddAsync(role);
         await DbContext.SaveChangesAsync();
 

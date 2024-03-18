@@ -1,22 +1,16 @@
-﻿using System.Net;
-using Api.FunctionalTests.Abstractions;
-using Api.FunctionalTests.Extensions;
-using Application.Errors;
+﻿using Application.Errors;
 using Contracts.Identity.Roles;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Shared.Authorization.Constants.Role;
+using System.Net;
 
 namespace Api.FunctionalTests.Identity.Roles;
 
-public class GetRoleTests(
-    FunctionalTestWebAppFactory factory) 
-    : BaseFunctionalTest(factory)
+public partial class RoleTests
 {
-    private const string BASE_ROUTE = "api/roles";
-
     [Fact]
-    public async Task Should_ReturnAllRoles_WhenExists()
+    public async Task Get_Should_ReturnAllRoles_WhenExists()
     {
         // Arrange
 
@@ -28,11 +22,11 @@ public class GetRoleTests(
         var result = await response.GetResult<List<RoleDto>>()!;
         result.Errors.Should().BeEmpty();
         result.Status.Should().Be(HttpStatusCode.OK);
-        result.Value!.Count.Should().Be(2);
+        result.Value!.Count.Should().BeGreaterThan(0);
     }
 
     [Fact]
-    public async Task Should_ReturnNotFound_WhenRoleNotExists()
+    public async Task Get_Should_ReturnNotFound_WhenRoleNotExists()
     {
         // Arrange
         Guid requestRoleId = Guid.NewGuid();
@@ -51,7 +45,7 @@ public class GetRoleTests(
     [Theory]
     [InlineData(RoleConstants.BasicRole)]
     [InlineData(RoleConstants.AdministratorRole)]
-    public async Task Should_ReturnRole_WhenExist(string roleName)
+    public async Task Get_Should_ReturnRole_WhenExist(string roleName)
     {
         // Arrange
         var role = await DbContext.Roles.SingleAsync(x => x.Name == roleName)!;

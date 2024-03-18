@@ -3,7 +3,7 @@
 internal static class BaseExtensions
 {
     private static readonly Random Random = new();
-    internal static string RandomString(int length)
+    internal static string RandomString(int length = 8)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         return new string(Enumerable.Repeat(chars, length)
