@@ -20,7 +20,7 @@ public class AuthEndpoints : IEndpoints
 
         authGroup.MapPost("/register", async (
                 [FromBody] RegisterRequest request,
-                ISender sender, CancellationToken cancellationToken) =>
+                [FromServices] ISender sender, CancellationToken cancellationToken) =>
             {
                 RegisterCommand command = new(request.FirstName, request.LastName, request.UserName, request.Email,
                     request.Password, request.PhoneNumber);
@@ -36,7 +36,7 @@ public class AuthEndpoints : IEndpoints
 
         authGroup.MapPost("/signin", async (
                 [FromBody] LoginRequest request,
-                ISender sender, CancellationToken cancellationToken) =>
+                [FromServices] ISender sender, CancellationToken cancellationToken) =>
             {
                 LoginCommand command = new(request.Email, request.Password, request.IsPersistent, request.TwoFactorCode, request.TwoFactorRecoveryCode);
                 Result<TokenResponse> result = await sender.Send(command, cancellationToken);
