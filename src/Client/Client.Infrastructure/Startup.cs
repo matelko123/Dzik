@@ -1,4 +1,5 @@
-﻿using Client.Infrastructure.Managers.Identity.Roles;
+﻿using Client.Infrastructure.Managers.Identity.RoleClaims;
+using Client.Infrastructure.Managers.Identity.Roles;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -22,13 +23,17 @@ public static class Startup
         var apiUrl = $"http://localhost:8080/api";
 
         builder.Services.AddRefitClient<IRolesClient>()
-           .ConfigureHttpClient(c => { c.BaseAddress = new Uri($"{apiUrl}/roles"); });
+           .ConfigureHttpClient(c => { c.BaseAddress = new Uri($"{apiUrl}/identity/roles"); });
+
+        builder.Services.AddRefitClient<IRoleClaimsClient>()
+           .ConfigureHttpClient(c => { c.BaseAddress = new Uri($"{apiUrl}/identity/roleclaims"); });
 
         return builder;
     }
 
     private static IServiceCollection AddManagers(this IServiceCollection services)
     {
-        return services.AddSingleton<IRoleManager, RoleManager>();
+        return services.AddSingleton<IRoleManager, RoleManager>()
+            .AddSingleton<IRoleClaimsManager, RoleClaimsManager>();
     }
 }

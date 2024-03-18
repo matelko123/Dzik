@@ -1,11 +1,12 @@
-﻿using Contracts.Identity.Roles;
+﻿using Contracts.Identity.Authentication;
+using Contracts.Identity.Roles;
 using Shared.Wrapper;
 
 namespace Client.Infrastructure.Managers.Identity.Roles;
 
 public class RoleManager(IRolesClient client) : IRoleManager
 {
-    public async Task<Result> CreateRole(CreateRoleRequest request)
+    public async Task<Result> CreateRole(RoleDto request)
     {
         return await client.CreateRole(request);
     }
@@ -24,8 +25,14 @@ public class RoleManager(IRolesClient client) : IRoleManager
     {
         return await client.GetRoleById(id);
     }
-    public async Task<Result> UpdateRole(Guid id, UpdateRoleRequest request)
+
+    public async Task<Result<List<UserDto>>> GetUsersByRoleAsync(Guid id)
     {
-        return await client.UpdateRole(id, request);
+        return await client.GetUsersByRoleAsync(id);
+    }
+
+    public async Task<Result> UpdateRole(RoleDto request)
+    {
+        return await client.UpdateRole(request.Id, request);
     }
 }

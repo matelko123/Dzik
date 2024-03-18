@@ -1,0 +1,217 @@
+﻿@page "/identity/role/{roleId:guid}"
+@using Contracts.Identity.Authentication
+@using Contracts.Identity.RoleClaims
+@inject IRoleManager RoleManager
+@inject IRoleClaimsManager RoleClaimsManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Role @role?.Name</PageTitle>
+
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    <MudTabPanel Text="Details">
+        <EditForm Model="@role" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12" sm="7">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudTextField Label="Name" Required="true" @bind-Value="role.Name" For="@(() => role.Name)" />
+                            <MudTextField Label="Description" Required="true" @bind-Value="role.Description" For="@(() => role.Description)" />
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Save</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </MudTabPanel>
+    <MudTabPanel Text="Users">
+        <MudDataGrid @ref=grid Elevation="25" T="UserDto" ServerData="@(new Func<GridState<UserDto>, Task<GridData<UserDto>>>(ServerReload))"
+                     Hover="@_hover" Dense="@_dense" Bordered="@_bordered" Striped="@_striped" Filter="new Func<UserDto,bool>(FilterFunc1)">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Users</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="x => x.FirstName" />
+                <PropertyColumn Property="x => x.LastName" />
+                <PropertyColumn Property="x => x.UserName" />
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="UserDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+        <div class="d-flex flex-wrap mt-4">
+            <MudSwitch @bind-Value="@_hover" Color="Color.Primary" Style="margin-left: 5px;">Hover</MudSwitch>
+            <MudSwitch @bind-Value="@_dense" Color="Color.Secondary" Style="margin-left: 5px;">Dense</MudSwitch>
+            <MudSwitch @bind-Value="@_striped" Color="Color.Tertiary" Style="margin-left: 5px;">Striped</MudSwitch>
+            <MudSwitch @bind-Value="@_bordered" Color="Color.Warning" Style="margin-left: 5px;">Bordered</MudSwitch>
+        </div>
+
+
+    </MudTabPanel>
+    <MudTabPanel Text="Permissions">
+        <MudTabs Elevation="25" Rounded="true" Centered="true" ApplyEffectsToContainer="true" AlwaysShowScrollButtons="true">
+            @foreach ((string group, var claims) in GroupedRoleClaims)
+            {
+                <MudTabPanel Text="@group" Style="padding-right: 43px;">
+                    <MudTable Elevation="25" Items="@claims" Hover="@_hover" Dense="@_dense" Bordered="@_bordered" Striped="@_striped">
+                        <ToolBarContent>
+                            <div class="justify-center mud-text-align-center">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="SaveAsync" ButtonType="ButtonType.Submit">Update Role Permissions</MudButton>
+                            </div>
+                            <MudSpacer />
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh><MudTableSortLabel SortBy="new Func<RoleClaimsDto, object>(x => x.Value)">Value</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<RoleClaimsDto, object>(x => x.Description)">Description</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<RoleClaimsDto, object>(x => x.Selected)">Selected</MudTableSortLabel></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Nazwa">
+                                <MudHighlighter Text="@context.Value" />
+                            </MudTd>
+                            <MudTd DataLabel="Opis">
+                                <MudHighlighter Text="@context.Description" />
+                            </MudTd>
+                            <MudTd DataLabel="Status"><MudCheckBox @bind-Value="@context.Selected" Color="Color.Secondary" /></MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudTabPanel>
+            }
+            <div class="d-flex flex-wrap mt-4">
+                <MudSwitch @bind-Value="@_hover" Color="Color.Primary" Style="margin-left: 5px;">Hover</MudSwitch>
+                <MudSwitch @bind-Value="@_dense" Color="Color.Secondary" Style="margin-left: 5px;">Dense</MudSwitch>
+                <MudSwitch @bind-Value="@_striped" Color="Color.Tertiary" Style="margin-left: 5px;">Striped</MudSwitch>
+                <MudSwitch @bind-Value="@_bordered" Color="Color.Warning" Style="margin-left: 5px;">Bordered</MudSwitch>
+            </div>
+        </MudTabs>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    [Parameter]
+    public Guid roleId { get; set; }
+
+    MudDataGrid<UserDto> grid = new();
+    bool _hover = true;
+    bool _dense = false;
+    bool _striped = true;
+    bool _bordered = false;
+    RoleDto? role = new();
+    MudForm form = new();
+    bool success;
+    string[] errors = { };
+    Dictionary<string, HashSet<RoleClaimsDto>> GroupedRoleClaims = new();
+    List<UserDto> users = new();
+
+    private string searchString1 = "";
+
+    private async Task<GridData<UserDto>> ServerReload(GridState<UserDto> state)
+    {
+        users = await RoleManager.GetUsersByRoleAsync(roleId);
+        return new GridData<UserDto>() 
+        { 
+            TotalItems = users.Count(),
+            Items = users
+        };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await RoleManager.GetRoleById(roleId);
+        if (response.IsSuccess)
+        {
+            role = response.Value!;
+        }
+        else
+        {
+            Console.WriteLine(string.Join("; ", response.Errors));
+        }
+        await GetRolePermissionsAsync();
+    }
+    private async void OnValidSubmit(EditContext context)
+    {
+        var response = await RoleManager.UpdateRole(role!);
+        success = response.IsSuccess;
+        StateHasChanged();
+    }
+
+    private async Task GetRolePermissionsAsync()
+    {
+        List<RoleClaimsDto> allClaims = new();
+        var result = await RoleClaimsManager.GetAllRoleClaims();
+        if (result.IsSuccess)
+        {
+            allClaims = result.Value!.Claims
+                .Select(x => new RoleClaimsDto(x))
+                .ToList();
+        }
+        else
+        {
+            Snackbar.Add($"Error {string.Join(". ", result.Errors)}", Severity.Error);
+            return;
+        }
+
+        var result2 = await RoleClaimsManager.GetRoleClaimByRoleId(roleId);
+        if (result2.IsSuccess)
+        {
+            var data = result2.Value!.Claims;
+            allClaims.ForEach(x => x.Selected = data.Any(y => y.Value == x.Value));
+        }
+        else
+        {
+            Snackbar.Add($"Error {string.Join(". ", result.Errors)}", Severity.Error);
+            return;
+        }
+
+        GroupedRoleClaims = allClaims
+            .GroupBy(x => x.Group)
+            .ToDictionary(x => x.Key, y => y.ToHashSet());
+    }
+
+    private async void SaveAsync()
+    {
+        var selectedClaims = GroupedRoleClaims
+            .SelectMany(x => x.Value)
+            .Where(x => x.Selected)
+            .Select(x => x.Value)
+            .ToList();
+        var response = await RoleClaimsManager.UpdateRoleClaims(roleId, selectedClaims);
+        success = response.IsSuccess;
+        StateHasChanged();
+    }
+
+    private bool FilterFunc1(UserDto element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(UserDto element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.UserName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    class RoleClaimsDto
+    {
+        public string Group { get; set; } = default!;
+        public string Value { get; set; } = default!;
+        public string? Description { get; set; }
+        public bool Selected { get; set; } = false;
+
+        public RoleClaimsDto(RoleClaimResponse response)
+        {
+            Group = response.Group;
+            Value = response.Value;
+            Description = response.Description;
+        }
+    }
+}
