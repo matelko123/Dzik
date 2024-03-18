@@ -25,15 +25,21 @@ public class UserService(
     public async Task<bool> ExistsWithPhoneNumberAsync(string phoneNumber, Guid? exceptId = null)
         => await userManager.Users.FirstOrDefaultAsync(x => x.PhoneNumber == phoneNumber) is { } user && user.Id != exceptId;
 
-    public async Task<Result<List<UserDto>>> GetUsersByRoleAsync(Guid roleId, CancellationToken cancellationToken = default)
+    public async Task<Result<PagedList<UserDto>>> GetUsersByRoleAsync(Guid roleId, PagedRequest pagedRequest, CancellationToken cancellationToken = default)
     {
         var role = await appDbContext.Roles.SingleOrDefaultAsync(x => x.Id == roleId, cancellationToken);
         if (role is null)
         {
-            return Result<List<UserDto>>.Error(RoleErrors.NotFound);
+            return Result<PagedList<UserDto>>.Error(RoleErrors.NotFound);
         }
 
-        var users = await userManager.GetUsersInRoleAsync(role.Name!);
-        return Result<List<UserDto>>.Success(users.Adapt<List<UserDto>>());
+        var users = from u in appDbContext.Users
+                    join ur in appDbContext.UserRoles on u.Id equals ur.UserId
+                    where ur.RoleId == roleId
+                    select u.Adapt<UserDto>();
+
+        var res = await PagedList<UserDto>.ToPagedListAsync(users, pagedRequest.CurrentPage, pagedRequest.PageSize, cancellationToken);
+
+        return Result<PagedList<UserDto>>.Success(res);
     }
 }

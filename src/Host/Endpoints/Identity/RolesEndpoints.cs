@@ -1,6 +1,7 @@
 ﻿using Application.Identity.Roles;
 using Application.Identity.Users;
 using Contracts.Common;
+using Contracts.Identity.Authentication;
 using Contracts.Identity.Roles;
 using Domain.Entities.Identity;
 using Host.Endpoints.Internal;
@@ -47,14 +48,14 @@ public class RolesEndpoints : IEndpoints
             .Produces<ErrorResult>(StatusCodes.Status500InternalServerError);
 
         rolesGroup.MapGet(RolesEndpointsConstants.GetUsersByRoleId, async (
-            [FromRoute] Guid id,
+            [FromRoute] Guid id, [AsParameters] PagedRequest pagedRequest,
             [FromServices] IUserService userService, CancellationToken cancellationToken) =>
         {
-            var role = await userService.GetUsersByRoleAsync(id, cancellationToken);
+            var role = await userService.GetUsersByRoleAsync(id, pagedRequest, cancellationToken);
             return TypedResults.Ok(role);
         })
             .WithName("GetUsersByRoleId")
-            .Produces<Result<RoleDto>>()
+            .Produces<Result<PagedList<UserDto>>>()
             .Produces<ErrorResult>(StatusCodes.Status500InternalServerError);
 
         rolesGroup.MapPost(RolesEndpointsConstants.CreateRole, async (

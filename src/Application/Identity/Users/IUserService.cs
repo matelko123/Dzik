@@ -9,5 +9,5 @@ public interface IUserService
     Task<bool> ExistsWithEmailAsync(string email, Guid? exceptId = null);
     Task<bool> ExistsWithPhoneNumberAsync(string phoneNumber, Guid? exceptId = null);
 
-    Task<Result<List<UserDto>>> GetUsersByRoleAsync(Guid roleId, CancellationToken cancellationToken = default);
+    Task<Result<PagedList<UserDto>>> GetUsersByRoleAsync(Guid roleId, PagedRequest pagedRequest, CancellationToken cancellationToken = default);
 }

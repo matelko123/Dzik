@@ -7,6 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Remove="Migrations\**" />
+      <Compile Remove="Services\**" />
+      <EmbeddedResource Remove="Migrations\**" />
+      <EmbeddedResource Remove="Services\**" />
+      <None Remove="Migrations\**" />
+      <None Remove="Services\**" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="Mapster" Version="7.4.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
@@ -27,11 +36,6 @@
     <ItemGroup>
       <ProjectReference Include="..\Application\Application.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Migrations\" />
-      <Folder Include="Services\" />
     </ItemGroup>
 
 </Project>
