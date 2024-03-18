@@ -17,7 +17,6 @@ using System.Xml.Linq;
 namespace Infrastructure.Identity;
 
 public class RoleService(
-    AppDbContext appDbContext,
     RoleManager<AppRole> roleManager, 
     UserManager<AppUser> userManager)
     : IRoleService
@@ -40,32 +39,6 @@ public class RoleService(
         return role is null
             ? Result<RoleDto>.Error(RoleErrors.NotFound)
             : Result<RoleDto>.Success(role.Adapt<RoleDto>());
-    }
-
-    public async Task<Result<RoleDto>> GetByIdWithPermissionsAsync(Guid roleId, CancellationToken cancellationToken = default)
-    {
-        var existingRole = await roleManager.FindByIdAsync(roleId.ToString());
-        if (existingRole is null)
-        {
-            return Result<RoleDto>.Error(RoleErrors.NotFound);
-        }
-
-        IList<Claim> roleClaims = await roleManager.GetClaimsAsync(existingRole);
-
-        var response = existingRole.Adapt<RoleDto>();
-        response.Permissions = new List<RoleClaimResponse>(await appDbContext
-            .RoleClaims
-            .Where(r => r.RoleId == existingRole.Id)
-            .Select(rc => new RoleClaimResponse
-            (
-                rc.ClaimType!,
-                rc.ClaimValue!,
-                rc.Group!,
-                rc.Description
-            ))
-            .ToListAsync(cancellationToken));
-
-        return Result<RoleDto>.Success(response);
     }
 
     public async Task<Result<RoleDto>> GetByNameAsync(string name, CancellationToken cancellationToken)
@@ -96,9 +69,9 @@ public class RoleService(
             : Result<AppRole>.Error(result.GetErrors());
     }
 
-    public async Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken cancellationToken)
+    public async Task<Result> UpdateAsync(Guid roleId, RoleDto request, CancellationToken cancellationToken)
     {
-        var existingRole = await roleManager.FindByIdAsync(request.RoleId.ToString());
+        var existingRole = await roleManager.FindByIdAsync(roleId.ToString());
         if (existingRole is null)
         {
             return Result<RoleDto>.Error(RoleErrors.NotFound);
@@ -119,39 +92,6 @@ public class RoleService(
             return Result.Error(result.GetErrors());
         }
 
-        var currentClaims = await roleManager.GetClaimsAsync(existingRole);
-
-        // Remove permissions that were previously selected
-        foreach (var claim in currentClaims.Where(c => !request.Permissions.Contains(c.Value)))
-        {
-            var removeResult = await roleManager.RemoveClaimAsync(existingRole, claim);
-            if (!removeResult.Succeeded)
-            {
-                return Result.Error(removeResult.GetErrors());
-            }
-        }
-
-        // Add all permissions that were not previously selected
-        var allPermissions = FSHPermissions.All;
-        var permissionsToAdd = request.Permissions
-            .Where(c => !currentClaims.Select(x => x.Value).Contains(c))
-            .Where(c => allPermissions.Select(x => x.Name).Contains(c));
-
-        foreach (string permission in permissionsToAdd)
-        {
-            var fshPermission = FSHPermissions.All.FirstOrDefault(x => x.Name == permission);
-            if(fshPermission is null) continue;
-
-            appDbContext.RoleClaims.Add(new AppRoleClaim
-            {
-                RoleId = existingRole.Id,
-                ClaimType = ApplicationClaimTypes.Permission,
-                ClaimValue = permission,
-                Group = fshPermission.Resource
-            });
-            await appDbContext.SaveChangesAsync(cancellationToken);
-        }
-
         return Result.Success();
     }
 
@@ -163,7 +103,7 @@ public class RoleService(
             return Result<AppRole>.Error(RoleErrors.NotFound);
         }
         
-        if (AppRoles.IsDefault(existingRole.Name!))
+        if (RoleConstants.IsDefault(existingRole.Name!))
         {
             return Result<AppRole>.Error(RoleErrors.NotAllowed);
         }
@@ -177,11 +117,5 @@ public class RoleService(
         return deleteResult.Succeeded
             ? Result.NoContent()
             : Result.Error(deleteResult.GetErrors());
-    }
-
-    public Result<List<FSHPermission>> GetAllPermissions(CancellationToken cancellationToken = default)
-    {
-        var allPermissions = FSHPermissions.All.ToList();
-        return Result<List<FSHPermission>>.Success(allPermissions);
     }
 }

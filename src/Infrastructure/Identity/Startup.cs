@@ -1,3 +1,4 @@
+using Application.Identity.RoleClaim;
 using Application.Identity.Roles;
 using Application.Identity.Tokens;
 using Application.Identity.Users;
@@ -15,6 +16,7 @@ internal static class Startup
         return services
             .AddTransient<IRefreshTokenService, RefreshTokenService>()
             .AddTransient<IRoleService, RoleService>()
+            .AddTransient<IRoleClaimService, RoleClaimService>()
             .AddTransient<ITokenService, TokenService>()
             .AddTransient<IUserService, UserService>()
             .AddIdentity<AppUser, AppRole>(options =>
